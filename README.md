@@ -52,4 +52,23 @@ Here is a pre-start checklist:
 
 ## Implementation
 
-** ADD YOUR IMPLEMENTATION DOCUMENTATION HERE **
+### Description
+
+This is a simple app that will be built upon as the HiveBox project is completed over time.
+In its current state, the script get the app's most recent release and print it in the command line.
+
+### Prerequisites
+
+- Docker
+
+### Preparation
+
+- Clone the repository by opening a terminal and running `git clone https://github.com/MayKB/devops-hands-on-project-hivebox.git`
+
+### Execution
+
+- To build the image, navigate to the project folder and run `docker build -t <image name> .`
+- To create and run the image as a container, run `docker run --name <container name> <image name>`
+- The app version should be printed out. To stop the container, run `docker stop <container name>`
+- If you wish to remove the stopped container, run `docker rm <container name>`
+- If you wish to remove the built image, run `docker rmi <image name>`
