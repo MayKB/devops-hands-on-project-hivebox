@@ -1,11 +1,18 @@
 FROM ubuntu:24.04
-RUN apt-get update -y
+
+WORKDIR /
+
+RUN apt-get update -y \ 
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 RUN apt-get upgrade -y
-RUN apt-get install -y python3.12
-RUN apt-get install -y python3-pip
+RUN apt-get install --no-install-recommends -y python=3.12  \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+RUN apt-get install --no-install-recommends -y python3-pip=26
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt --break-system-packages
+RUN pip install --no-cache-dir -r requirements.txt --break-system-packages
 
 COPY script.py .
 CMD ["python3", "script.py"]
