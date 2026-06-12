@@ -24,7 +24,7 @@ def temperature():
     # For each of the given boxes:
     for box_id in ids:
         # Get json results from API
-        content = requests.get(f'https://api.opensensemap.org/boxes/{box_id}?format=json')
+        content = requests.get(f'https://api.opensensemap.org/boxes/{box_id}?format=json', timeout=10)
         # Check for successful connection
         if content.status_code == 200:
             # Get all sensors from sensebox
