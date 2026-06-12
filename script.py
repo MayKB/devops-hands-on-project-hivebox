@@ -30,17 +30,17 @@ def temperature():
             # Get all sensors from sensebox
             sensors = content.json()['sensors']
             # Loop through each of the sensors
-            for sensor in sensors: 
+            for sensor in sensors:
                 if sensor['title'] == 'Temperatur':
-                    # If there is no last measurement, or date or value for the measurement, return and alert
+                    # If no last measurement, or date or value for measurement, return and alert
                     result1 = sensor['lastMeasurement']
                     result2 = sensor['lastMeasurement']['createdAt']
                     result3 = sensor['lastMeasurement']['value']
                     if result1 is None or result2 is None or result3 is None:
                         return "No last measurement"
                     # See if last measurement was within the last hour
-                    measurement_time = datetime.fromisoformat(sensor['lastMeasurement']['createdAt'])
-                    time_diff = cur_time - measurement_time
+                    measure_time = datetime.fromisoformat(sensor['lastMeasurement']['createdAt'])
+                    time_diff = cur_time - measure_time
                     recent = time_diff.total_seconds() < 3600
                     # If there is a temperature sensor, add its value to the sum
                     if recent:
