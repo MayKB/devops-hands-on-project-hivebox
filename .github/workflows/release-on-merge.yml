@@ -12,3 +12,5 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: dexwritescode/release-on-merge-action@v1
+        with:
+          use-label-strategy: true
