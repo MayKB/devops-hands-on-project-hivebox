@@ -4,12 +4,15 @@ on:
   pull_request:
     types: [closed]
 
+permissions: read-all
+
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    permissions:
+        contents: write
+        pull-requests: read
     if: github.event.pull_request.merged
-    
     steps:
       - name: Tag
         uses: K-Phoen/semver-release-action@master
