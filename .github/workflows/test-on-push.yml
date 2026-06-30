@@ -7,16 +7,20 @@ name: Lint Build and Test
 
 on: [push]
 
+permissions: read-all
+
 jobs:
   pylint:
     runs-on: ubuntu-latest
+    permissions:
+        contents: read
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.12", "3.13", "3.14"]
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -30,21 +34,25 @@ jobs:
 
   lint-dockerfile:
     runs-on: ubuntu-latest
+    permissions:
+        contents: read
     steps:
-      - uses: actions/checkout@v6
-      - uses: hadolint/hadolint-action@v3.1.0
+      - uses: actions/checkout@v7
+      - uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: Dockerfile
   
   docker:
     runs-on: ubuntu-latest
+    permissions:
+        contents: read
     services:
       registry:
         image: registry:3
         ports:
           - 5000:5000
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
       
@@ -65,10 +73,12 @@ jobs:
 
   test-version:
     runs-on: ubuntu-latest
+    permissions:
+        contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.x'
       - name: Install dependencies
