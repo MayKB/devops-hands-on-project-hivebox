@@ -1,16 +1,19 @@
+name: Release
+
 on:
-  push:
-    branches:
-      - main
+  pull_request:
+    types: [closed]
 
 jobs:
-  release-on-merge:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    if: github.event.pull_request.merged
+    
     steps:
-      - uses: dexwritescode/release-on-merge-action@v1
+      - name: Tag
+        uses: K-Phoen/semver-release-action@master
         with:
-          use-label-strategy: true
+          release_branch: main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
