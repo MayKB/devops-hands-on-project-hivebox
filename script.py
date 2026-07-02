@@ -4,8 +4,9 @@
 ## https://stackoverflow.com/questions/76082808/how-to-get-github-repo-latest-release-in-python
 ## https://www.codecademy.com/article/python-environment-variables
 
+import os
+import requests
 from datetime import datetime, timezone
-import os, requests
 from dotenv import load_dotenv
 from flask import Flask
 from github import Github
