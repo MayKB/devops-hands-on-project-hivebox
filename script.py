@@ -11,6 +11,7 @@ import requests
 from dotenv import load_dotenv
 from flask import Flask
 from github import Github
+from prometheus_flask_exporter import PrometheusMetrics
 
 load_dotenv()
 
@@ -69,3 +70,7 @@ def version():
     repo = g.get_repo(repo_path)
     latest = repo.get_latest_release()
     return {"version": latest.name}
+
+# Get default Prometheus metrics
+metrics = PrometheusMetrics(app)
+metrics.info('app_info', 'Application info', version=version()['version'])
