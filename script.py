@@ -2,11 +2,17 @@
 
 # Sources:
 ## https://stackoverflow.com/questions/76082808/how-to-get-github-repo-latest-release-in-python
+## https://www.codecademy.com/article/python-environment-variables
 
+import os
 from datetime import datetime, timezone
+
 import requests
+from dotenv import load_dotenv
 from flask import Flask
 from github import Github
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -15,7 +21,7 @@ def temperature():
     """Get sensebox data and return average temperature from the last hour"""
 
     # Ids for senseboxes, given by tutorial
-    ids = ['5eba5fbad46fb8001b799786', '5c21ff8f919bf8001adf2488', '5ade1acf223bd80019a1011c']
+    ids = [os.getenv("SENSEBOX_ID_1"), os.getenv("SENSEBOX_ID_2"), os.getenv("SENSEBOX_ID_3")]
     # Total temperature from the senseboxes, start at 0 degrees
     total = 0
     # Get the current time
