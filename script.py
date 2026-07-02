@@ -58,8 +58,16 @@ def temperature():
     # Divide the sum of all the temperatures by 3 to get the average
     avg = total/3
 
+    match avg:
+        case 1 if avg < 11:
+            status = "Too Cold"
+        case 2 if avg > 36:
+            status = "Too Hot"
+        case _:
+            status = "Good"
+
     # Return the sum and average
-    return {"totaltemp": total, "averagetemp": avg}
+    return {"totaltemp": total, "averagetemp": avg, "status": status}
 
 @app.route('/version')
 def version():
