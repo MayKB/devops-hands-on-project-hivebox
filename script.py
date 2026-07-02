@@ -5,7 +5,7 @@
 ## https://www.codecademy.com/article/python-environment-variables
 
 from datetime import datetime, timezone
-import requests, os
+import os, requests
 from dotenv import load_dotenv
 from flask import Flask
 from github import Github
