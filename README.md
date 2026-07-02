@@ -66,12 +66,19 @@ In its current state, two endpoints can be accessed using Flask.
 ### Preparation
 
 - Clone the repository by opening a terminal and running `git clone https://github.com/MayKB/devops-hands-on-project-hivebox.git`
+- Create a file called `.env` in the project root, and input three SenseBox IDs using the following format:
+````
+SENSEBOX_ID_1=5eba5fbad46fb8001b799786
+SENSEBOX_ID_2=5c21ff8f919bf8001adf2488
+SENSEBOX_ID_3=5ade1acf223bd80019a1011c
+````
 
 ### Local Execution
 
 - To build the image, navigate to the project folder and run `docker build -t <image name> .`
-- To create and run the image as a container, run `docker run --name <container name> -d -p 5000:5000 <image name>`
+- To create and run the image as a container, run `docker run --name <container name> -d -p 5000:5000 --env.file .env <image name>`
 - The API will be available at `http://localhost:5000`
+- You can test each of the endpoints by visiting `http://localhost:5000/<endpoint>` or by using the command `curl http://localhost:5000/<endpoint>`
 - Stop the container using `docker stop <container name>`
 - If you wish to remove the stopped container, run `docker rm <container name>`
 - If you wish to remove the built image, run `docker rmi <image name>`
