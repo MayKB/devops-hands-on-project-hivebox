@@ -55,9 +55,10 @@ Here is a pre-start checklist:
 ### Description
 
 This is a simple app that will be built upon as the HiveBox project is completed over time.
-In its current state, two endpoints can be accessed using Flask.
+In its current state, three endpoints can be accessed using Flask.
 - **/temperature:** Gets the average temperature of three SenseBoxes
 - **/version:** Gets the current version of the project on GitHub
+- **/metrics:** Gets Prometheus metrics about the app
 
 ### Prerequisites
 
