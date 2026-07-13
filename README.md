@@ -63,10 +63,16 @@ In its current state, three endpoints can be accessed using Flask.
 ### Prerequisites
 
 - Docker
+- kind
+- kubectl
+- GitHub Container Registry
+- curl
 
 ### Preparation
 
 - Clone the repository by opening a terminal and running `git clone https://github.com/MayKB/devops-hands-on-project-hivebox.git`
+- Make sure Docker is running and has Kubernetes enabled
+  - If using WSL, make sure `Enable integration with my default WSL distro` is set in Settings > Resources > WSL integration
 - Create a file called `.env` in the project root, and input three SenseBox IDs using the following format:
 ````
 SENSEBOX_ID_1=5eba5fbad46fb8001b799786
@@ -76,10 +82,38 @@ SENSEBOX_ID_3=5ade1acf223bd80019a1011c
 
 ### Local Execution
 
+- To create a kind cluster, run `kind create cluster`
+- Make sure you are using the correct context by running `kubectl config use-context kind-kind`.
+- Install cloud-provider-kind, which will emulate a cloud connection, start by running `VERSION="$(basename $(curl -s -L -o /dev/null -w '%{url_effective}' https://github.com/kubernetes-sigs/cloud-provider-kind/releases/latest))"`
+  - If you are using a proper Linux distribution, run `docker run -d --name cloud-provider-kind --rm --network host -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:${VERSION}`
+  - If you are on a Mac or using WSL 2, run `sudo docker run -d --name cloud-provider-kind --privileged --rm --network host -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:${VERSION} --enable-lb-port-mapping` and enter your password if prompted
+- Verify that cloud-provider-kind is running with `docker ps --filter name=cloud-provider-kind`. You can also check the logs with `docker logs cloud-provider-kind`
+- Apply the cloud-provider-kind manifest file with `kubectl apply -f .k8s/deploy-cloud.yaml`
+- Verify the gateway was created properly by running `kubectl get gateway -n gateway-infra gateway`. Look for `PROGRAMMED: True` to confirm.
 - To build the image, navigate to the project folder and run `docker build -t <image name> .`
-- To create and run the image as a container, run `docker run --name <container name> -d -p 5000:5000 --env.file .env <image name>`
-- The API will be available at `http://localhost:5000`
-- You can test each of the endpoints by visiting `http://localhost:5000/<endpoint>` or by using the command `curl http://localhost:5000/<endpoint>`
-- Stop the container using `docker stop <container name>`
-- If you wish to remove the stopped container, run `docker rm <container name>`
-- If you wish to remove the built image, run `docker rmi <image name>`
+- Tag the image using `docker tag <image name> ghcr.io/<lowercase github username/org name>/<image name>:latest`
+- Push to GitHub Container Registry using `docker push ghcr.io/<lowercase github username/org name>/<image name>:latest`
+- Update `.k8s/deploy-app.yaml` to use `image: ghcr.io/<lowercase github username/org name>/<image name>:latest`
+- Apply the app deploy manifest file with `kubectl apply -f .k8s/deploy-app.yaml`
+- Create a secret to allow you to pull from the registry by running
+````
+kubectl create secret docker-registry ghcr-secret \
+  --docker-server=ghcr.io \
+  --docker-username=<username> \
+  --docker-password=<token> \
+  -n hivebox-namespace
+````
+- Apply the http routing manifest file with `kubectl apply -f .k8s/http-route.yaml`
+- Test the application with `curl`
+  - If using a proper linux distribution, run `GW_ADDR=$(kubectl get gateway -n gateway-infra gateway -o jsonpath='{.status.addresses[0].value}')` to set the IP address, then run `curl --resolve some.exampledomain.example:80:${GW_ADDR}/metrics http://some.exampledomain.example` to test the `/metrics` endpoint.
+  - If using WSL2, first find the ephemeral port by running `docker ps` then finding the `0.0.0.0:<ephemeral port>->80/tcp` address that belongs to the `envoyproxy/envoy` image. Then test the `metrics` endpoint with `curl -v --max-time 15 -H "Host: some.exampledomain.example" http://localhost:<port>/metrics`. The same can
+
+### Cleanup
+
+- Start by deleting the namespaces and their resources with
+````
+kubectl delete namespace gateway-infra
+kubectl delete namespace hivebox-namespace
+````
+- Stop and remove cloud-provider-kind with `docker stop cloud-provider-kind`
+- Delete the kind cluster with `kind delete cluster`
