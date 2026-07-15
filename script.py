@@ -33,7 +33,7 @@ def temperature():
     for box_id in ids:
 
         try:
-            url = (f'https://api.opensensemap.org/boxes/{box_id}?format=json')
+            url = f'https://api.opensensemap.org/boxes/{box_id}?format=json'
             sense = requests.get(url, timeout=10)
             sense.raise_for_status()
         except requests.exceptions.RequestException as e:
@@ -62,7 +62,7 @@ def temperature():
                 if recent:
                     total += float(sensor['lastMeasurement']['value'])
                 else:
-                    createdAt = sensor['lastMeasurement']['createdAt']
+                    created_at = sensor['lastMeasurement']['createdAt']
                     return {"error": f"Last value too old for {box_id}, {createdAt}"}, 200
 
     # Divide the sum of all the temperatures by 3 to get the average
@@ -77,7 +77,7 @@ def temperature():
         status = "Good"
 
     # Return the sum and average
-    return {"boxid1": ids[0], "boxid2": ids[1], "boxid3": ids[2], 
+    return {"boxid1": ids[0], "boxid2": ids[1], "boxid3": ids[2],
             "totaltemp": total, "averagetemp": avg, "status": status}
 
 @app.route('/version')
