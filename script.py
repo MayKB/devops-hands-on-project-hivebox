@@ -63,7 +63,7 @@ def temperature():
                     total += float(sensor['lastMeasurement']['value'])
                 else:
                     created_at = sensor['lastMeasurement']['createdAt']
-                    return {"error": f"Last value too old for {box_id}, {createdAt}"}, 200
+                    return {"error": f"Last value too old for {box_id}, {created_at}"}, 200
 
     # Divide the sum of all the temperatures by 3 to get the average
     avg = total/3
