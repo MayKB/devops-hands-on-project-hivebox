@@ -28,22 +28,23 @@ def temperature():
     total = 0
     # Get the current time
     cur_time = datetime.now(timezone.utc)
-    
+
     # For each of the given boxes:
     for box_id in ids:
-        
+
         try:
-            sense = requests.get(f'https://api.opensensemap.org/boxes/{box_id}?format=json', timeout=10)
+            url = (f'https://api.opensensemap.org/boxes/{box_id}?format=json')
+            sense = requests.get(url, timeout=10)
             sense.raise_for_status()
         except requests.exceptions.RequestException as e:
             return {"error": f"Could not reach API for box {box_id}: {e}"}, 502
-            
+
         # Get all sensors from sensebox
         sensors = sense.json()['sensors']
         # Loop through each of the sensors
         for sensor in sensors:
             if sensor['title'] == 'Temperatur':
-                
+
                 # If no last measurement, or date or value for measurement, return and alert
                 if sensor['lastMeasurement'] is None:
                     return {"error": f"No last measurement for box {box_id}"}, 200
@@ -56,12 +57,13 @@ def temperature():
                 measure_time = datetime.fromisoformat(sensor['lastMeasurement']['createdAt'])
                 time_diff = cur_time - measure_time
                 recent = time_diff.total_seconds() < 3600
-                
+
                 # If there is a recent temperature value, add its value to the sum
                 if recent:
                     total += float(sensor['lastMeasurement']['value'])
                 else:
-                    return {"error": f"Last value too old for {box_id}, {sensor['lastMeasurement']['createdAt']}"}, 200
+                    createdAt = sensor['lastMeasurement']['createdAt']
+                    return {"error": f"Last value too old for {box_id}, {createdAt}"}, 200
 
     # Divide the sum of all the temperatures by 3 to get the average
     avg = total/3
@@ -75,7 +77,8 @@ def temperature():
         status = "Good"
 
     # Return the sum and average
-    return {"boxid1": ids[0], "boxid2": ids[1], "boxid3": ids[2],"totaltemp": total, "averagetemp": avg, "status": status}
+    return {"boxid1": ids[0], "boxid2": ids[1], "boxid3": ids[2], 
+            "totaltemp": total, "averagetemp": avg, "status": status}
 
 @app.route('/version')
 def version():
