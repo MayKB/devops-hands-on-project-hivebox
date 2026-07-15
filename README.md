@@ -95,6 +95,7 @@ SENSEBOX_ID_3=5ade1acf223bd80019a1011c
 - Push to GitHub Container Registry using `docker push ghcr.io/<lowercase github username/org name>/<image name>:latest`
 - Update `.k8s/deploy-app.yaml` to use `image: ghcr.io/<lowercase github username/org name>/<image name>:latest`
 - Apply the app deploy manifest file with `kubectl apply -f .k8s/deploy-app.yaml`
+- Apply your env variables as a configmap using `kubectl create configmap hivebox-config --from-env-file=.env -n hivebox-namespace`
 - Create a secret to allow you to pull from the registry by running
 ````
 kubectl create secret docker-registry ghcr-secret \
