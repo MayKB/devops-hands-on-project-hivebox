@@ -95,6 +95,7 @@ SENSEBOX_ID_3=5ade1acf223bd80019a1011c
 - Push to GitHub Container Registry using `docker push ghcr.io/<lowercase github username/org name>/<image name>:latest`
 - Update `.k8s/deploy-app.yaml` to use `image: ghcr.io/<lowercase github username/org name>/<image name>:latest`
 - Apply the app deploy manifest file with `kubectl apply -f .k8s/deploy-app.yaml`
+- Apply your env variables as a configmap using `kubectl create configmap hivebox-config --from-env-file=.env -n hivebox-namespace`
 - Create a secret to allow you to pull from the registry by running
 ````
 kubectl create secret docker-registry ghcr-secret \
@@ -105,8 +106,8 @@ kubectl create secret docker-registry ghcr-secret \
 ````
 - Apply the http routing manifest file with `kubectl apply -f .k8s/http-route.yaml`
 - Test the application with `curl`
-  - If using a proper linux distribution, run `GW_ADDR=$(kubectl get gateway -n gateway-infra gateway -o jsonpath='{.status.addresses[0].value}')` to set the IP address, then run `curl --resolve some.exampledomain.example:80:${GW_ADDR}/metrics http://some.exampledomain.example` to test the `/metrics` endpoint.
-  - If using WSL2, first find the ephemeral port by running `docker ps` then finding the `0.0.0.0:<ephemeral port>->80/tcp` address that belongs to the `envoyproxy/envoy` image. Then test the `metrics` endpoint with `curl -v --max-time 15 -H "Host: some.exampledomain.example" http://localhost:<port>/metrics`. The same can
+  - If using a proper linux distribution, run `GW_ADDR=$(kubectl get gateway -n gateway-infra gateway -o jsonpath='{.status.addresses[0].value}')` to set the IP address, then run `curl --resolve some.exampledomain.example:80:${GW_ADDR}/metrics http://some.exampledomain.example` to test the `/metrics` endpoint. The same can be done for `/version` and `/temperature`.
+  - If using WSL2, first find the ephemeral port by running `docker ps` then finding the `0.0.0.0:<ephemeral port>->80/tcp` address that belongs to the `envoyproxy/envoy` image. Then test the `metrics` endpoint with `curl -v --max-time 15 -H "Host: some.exampledomain.example" http://localhost:<port>/metrics`. The same can be done for `/version` and `/temperature`. It may take up to a minute for it to start connecting properly, so if you get an error give it some time before trying again.
 
 ### Cleanup
 

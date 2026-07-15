@@ -48,6 +48,9 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
+        envFrom:
+        - configMapRef:
+            name: hivebox-config
         image: ghcr.io/maykb/hivebox-image:latest
         name: hivebox
       imagePullSecrets:
