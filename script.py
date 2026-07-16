@@ -42,6 +42,7 @@ def temperature():
 
         # Get all sensors from sensebox
         sensors = sense.json()['sensors']
+        temp_sensor = None
 
         # Loop through each of the sensors to find the temperature sensor
         for sensor in sensors:
