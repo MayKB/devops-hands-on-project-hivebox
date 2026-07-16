@@ -92,8 +92,8 @@ def get_temp(box_id):
     # If there is a recent temperature value, add its value to the sum
     if recent:
         return float(s_value)
-    else:
-        return {"error": f"Last value too old for {box_id}, {s_created_at}"}, 200
+
+    return {"error": f"Last value too old for {box_id}, {s_created_at}"}, 200
 
 @app.route('/version', methods=['GET'])
 def version():
