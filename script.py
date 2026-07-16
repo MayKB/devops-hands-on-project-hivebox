@@ -46,7 +46,7 @@ def temperature():
 
         # Loop through each of the sensors
         for sensor in sensors:
-            
+
             s_created_at = sensor['lastMeasurement']['createdAt']
             s_value = sensor['lastMeasurement']['value']
 
@@ -68,7 +68,7 @@ def temperature():
                 else:
                     return {"error": f"Last value too old for {box_id}, {s_created_at}"}, 200
 
-    if temp_sensor == False:
+    if temp_sensor is False:
         return {"error": "One or more boxes does not have a temperature sensor"}, 200
 
     # Divide the sum of all the temperatures by 3 to get the average
