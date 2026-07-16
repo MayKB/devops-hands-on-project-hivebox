@@ -57,7 +57,7 @@ def temperature():
                 return {"error": f"No date for last measurement of box {box_id}"}, 200
             elif s_title == 'Temperatur' and s_value is None:
                 return {"error": f"No value of last measurement for box {box_id}"}, 200
-            elif s_title == 'Temperatur' # Temperature value exists
+            elif s_title == 'Temperatur': # Temperature value exists
                 # See if last measurement was within the last hour
                 measure_time = datetime.fromisoformat(sensor['lastMeasurement']['createdAt'])
                 time_diff = cur_time - measure_time
