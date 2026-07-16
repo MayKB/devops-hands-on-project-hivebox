@@ -11,14 +11,17 @@ from datetime import datetime, timezone
 import requests
 from dotenv import load_dotenv
 from flask import Flask
+from flask_wtf.csrf import CSRFProtect
 from github import Github
 from prometheus_flask_exporter import PrometheusMetrics
 
 load_dotenv()
 
 app = Flask(__name__)
+csrf = CSRFProtect()
+csrf.init_app(app)
 
-@app.route("/temperature")
+@app.route("/temperature", methods=['GET'])
 def temperature():
     """Get sensebox data and return average temperature from the last hour"""
 
@@ -26,8 +29,6 @@ def temperature():
     ids = [os.getenv("SENSEBOX_ID_1"), os.getenv("SENSEBOX_ID_2"), os.getenv("SENSEBOX_ID_3")]
     # Total temperature from the senseboxes, start at 0 degrees
     total = 0
-    # Get the current time
-    cur_time = datetime.now(timezone.utc)
 
     # For each of the given boxes:
     for box_id in ids:
@@ -41,29 +42,34 @@ def temperature():
 
         # Get all sensors from sensebox
         sensors = sense.json()['sensors']
+        temp_sensor = False
+
         # Loop through each of the sensors
         for sensor in sensors:
-            if sensor['title'] == 'Temperatur':
 
-                # If no last measurement, or date or value for measurement, return and alert
-                if sensor['lastMeasurement'] is None:
-                    return {"error": f"No last measurement for box {box_id}"}, 200
-                if sensor['lastMeasurement']['createdAt'] is None:
-                    return {"error": f"No date for last measurement of box {box_id}"}, 200
-                if sensor['lastMeasurement']['value'] is None:
-                    return {"error": f"No value of last measurement for box {box_id}"}, 200
+            s_created_at = sensor['lastMeasurement']['createdAt']
+            s_value = sensor['lastMeasurement']['value']
+
+            # If no last measurement, or date or value for measurement, return and alert
+            if sensor['title'] == 'Temperatur' and sensor['lastMeasurement'] is None:
+                return {"error": f"No last measurement for box {box_id}"}, 200
+            if sensor['title'] == 'Temperatur' and (s_created_at is None or s_value is None):
+                return {"error": f"Date or value missing for last measurement of box {box_id}"}, 200
+            if sensor['title'] == 'Temperatur': # Temperature value exists
+                temp_sensor = True
 
                 # See if last measurement was within the last hour
                 measure_time = datetime.fromisoformat(sensor['lastMeasurement']['createdAt'])
-                time_diff = cur_time - measure_time
-                recent = time_diff.total_seconds() < 3600
+                recent = (datetime.now(timezone.utc) - measure_time) < 3600
 
                 # If there is a recent temperature value, add its value to the sum
                 if recent:
                     total += float(sensor['lastMeasurement']['value'])
                 else:
-                    created_at = sensor['lastMeasurement']['createdAt']
-                    return {"error": f"Last value too old for {box_id}, {created_at}"}, 200
+                    return {"error": f"Last value too old for {box_id}, {s_created_at}"}, 200
+
+    if temp_sensor is False:
+        return {"error": "One or more boxes does not have a temperature sensor"}, 200
 
     # Divide the sum of all the temperatures by 3 to get the average
     avg = total/3
@@ -80,7 +86,7 @@ def temperature():
     return {"boxid1": ids[0], "boxid2": ids[1], "boxid3": ids[2],
             "totaltemp": total, "averagetemp": avg, "status": status}
 
-@app.route('/version')
+@app.route('/version', methods=['GET'])
 def version():
     """Get most recent app version"""
     token = None

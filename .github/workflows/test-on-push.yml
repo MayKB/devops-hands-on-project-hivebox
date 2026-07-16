@@ -7,8 +7,6 @@ name: Lint Build and Test
 
 on: [push]
 
-permissions: read-all
-
 jobs:
   pylint:
     runs-on: ubuntu-latest
