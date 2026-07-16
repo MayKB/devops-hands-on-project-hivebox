@@ -42,34 +42,37 @@ def temperature():
 
         # Get all sensors from sensebox
         sensors = sense.json()['sensors']
-        temp_sensor = False
+        temp_sensor = None
 
-        # Loop through each of the sensors
+        # Loop through each of the sensors to find the temperature sensor
         for sensor in sensors:
+            if sensor['title'] == 'Temperatur':
+                temp_sensor = sensor
 
-            s_created_at = sensor['lastMeasurement']['createdAt']
-            s_value = sensor['lastMeasurement']['value']
+        # If no temperature sensor was found, return and alert
+        if temp_sensor is None:
+            return {"error": "One or more boxes do not have a temperature sensor"}, 200
 
-            # If no last measurement, or date or value for measurement, return and alert
-            if sensor['title'] == 'Temperatur' and sensor['lastMeasurement'] is None:
-                return {"error": f"No last measurement for box {box_id}"}, 200
-            if sensor['title'] == 'Temperatur' and (s_created_at is None or s_value is None):
-                return {"error": f"Date or value missing for last measurement of box {box_id}"}, 200
-            if sensor['title'] == 'Temperatur': # Temperature value exists
-                temp_sensor = True
+        # If no last measurement was found, return and alert
+        if temp_sensor['lastMeasurement'] is None:
+            return {"error": f"No last measurement for box {box_id}"}, 200
 
-                # See if last measurement was within the last hour
-                measure_time = datetime.fromisoformat(sensor['lastMeasurement']['createdAt'])
-                recent = (datetime.now(timezone.utc) - measure_time) < 3600
+        s_created_at = temp_sensor['lastMeasurement']['createdAt']
+        s_value = temp_sensor['lastMeasurement']['value']
 
-                # If there is a recent temperature value, add its value to the sum
-                if recent:
-                    total += float(sensor['lastMeasurement']['value'])
-                else:
-                    return {"error": f"Last value too old for {box_id}, {s_created_at}"}, 200
+        # If date or value for last measurement, return and alert
+        if s_created_at is None or s_value is None:
+            return {"error": f"Date or value missing for last measurement of box {box_id}"}, 200
 
-    if temp_sensor is False:
-        return {"error": "One or more boxes does not have a temperature sensor"}, 200
+        # See if last measurement was within the last hour
+        measure_time = datetime.fromisoformat(s_created_at)
+        recent = (datetime.now(timezone.utc) - measure_time) < 3600
+
+        # If there is a recent temperature value, add its value to the sum
+        if recent:
+            total += float(s_value)
+        else:
+            return {"error": f"Last value too old for {box_id}, {s_created_at}"}, 200
 
     # Divide the sum of all the temperatures by 3 to get the average
     avg = total/3
