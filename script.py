@@ -32,10 +32,10 @@ def temperature():
 
     # For each of the given boxes:
     for box_id in ids:
-        if get_temp(box_id).isnumeric()
-            total += get_temp(box_id)
-        else
-            return get_temp(box_id)
+        result = get_temp(box_id)
+        if isinstance(result, tuple): # Returned an error
+            return result
+        total += result
 
     # Divide the sum of all the temperatures by 3 to get the average
     avg = total/3
@@ -52,7 +52,7 @@ def temperature():
     return {"boxid1": ids[0], "boxid2": ids[1], "boxid3": ids[2],
             "totaltemp": total, "averagetemp": avg, "status": status}
 
-def get_temp(box_id)
+def get_temp(box_id):
     """Get the temperature value of the sensebox for the given ID"""
     try:
         url = f'https://api.opensensemap.org/boxes/{box_id}?format=json'
@@ -87,7 +87,7 @@ def get_temp(box_id)
 
     # See if last measurement was within the last hour
     measure_time = datetime.fromisoformat(s_created_at)
-    recent = (datetime.now(timezone.utc) - measure_time) < 3600
+    recent = (datetime.now(timezone.utc) - measure_time).total_seconds() < 3600
 
     # If there is a recent temperature value, add its value to the sum
     if recent:

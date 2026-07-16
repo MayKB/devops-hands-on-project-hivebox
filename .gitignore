@@ -3,5 +3,4 @@ __pycache__/
 venv/
 .env
 notes/
-run-setup.sh
-cleanup.sh
+scripts/
