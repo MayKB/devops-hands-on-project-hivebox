@@ -17,8 +17,10 @@ from prometheus_flask_exporter import PrometheusMetrics
 load_dotenv()
 
 app = Flask(__name__)
+csrf = CSRFProtect()
+csrf.init_app(app)
 
-@app.route("/temperature")
+@app.route("/temperature", methods=['GET'])
 def temperature():
     """Get sensebox data and return average temperature from the last hour"""
 
@@ -43,16 +45,19 @@ def temperature():
         sensors = sense.json()['sensors']
         # Loop through each of the sensors
         for sensor in sensors:
-            if sensor['title'] == 'Temperatur':
-
-                # If no last measurement, or date or value for measurement, return and alert
-                if sensor['lastMeasurement'] is None:
-                    return {"error": f"No last measurement for box {box_id}"}, 200
-                if sensor['lastMeasurement']['createdAt'] is None:
-                    return {"error": f"No date for last measurement of box {box_id}"}, 200
-                if sensor['lastMeasurement']['value'] is None:
-                    return {"error": f"No value of last measurement for box {box_id}"}, 200
-
+            s_title = sensor['title']
+            s_l_measurement = sensor['lastMeasurement']
+            s_created_at = sensor['lastMeasurement']['createdAt']
+            s_value = sensor['lastMeasurement']['value']
+            
+            # If no last measurement, or date or value for measurement, return and alert
+            if s_title == 'Temperatur' and s_l_measurement is None:
+                return {"error": f"No last measurement for box {box_id}"}, 200
+            elif s_title == 'Temperatur' and s_created_at is None:
+                return {"error": f"No date for last measurement of box {box_id}"}, 200
+            elif s_title == 'Temperatur' and s_value is None:
+                return {"error": f"No value of last measurement for box {box_id}"}, 200
+            elif s_title == 'Temperatur' # Temperature value exists
                 # See if last measurement was within the last hour
                 measure_time = datetime.fromisoformat(sensor['lastMeasurement']['createdAt'])
                 time_diff = cur_time - measure_time
@@ -80,7 +85,7 @@ def temperature():
     return {"boxid1": ids[0], "boxid2": ids[1], "boxid3": ids[2],
             "totaltemp": total, "averagetemp": avg, "status": status}
 
-@app.route('/version')
+@app.route('/version', methods=['GET'])
 def version():
     """Get most recent app version"""
     token = None
