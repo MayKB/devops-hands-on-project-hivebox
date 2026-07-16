@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 import requests
 from dotenv import load_dotenv
 from flask import Flask
+from flask_wtf.csrf import CSRFProtect
 from github import Github
 from prometheus_flask_exporter import PrometheusMetrics
 
