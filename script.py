@@ -44,21 +44,21 @@ def temperature():
 
         # Get all sensors from sensebox
         sensors = sense.json()['sensors']
+        temp_sensor = false
+        
         # Loop through each of the sensors
         for sensor in sensors:
-            s_title = sensor['title']
-            s_l_measurement = sensor['lastMeasurement']
-            s_created_at = sensor['lastMeasurement']['createdAt']
-            s_value = sensor['lastMeasurement']['value']
-            
+
             # If no last measurement, or date or value for measurement, return and alert
-            if s_title == 'Temperatur' and s_l_measurement is None:
+            if sensor['title'] == 'Temperatur' and sensor['lastMeasurement'] is None:
                 return {"error": f"No last measurement for box {box_id}"}, 200
-            elif s_title == 'Temperatur' and s_created_at is None:
+            if sensor['title'] == 'Temperatur' and sensor['lastMeasurement']['createdAt'] is None:
                 return {"error": f"No date for last measurement of box {box_id}"}, 200
-            elif s_title == 'Temperatur' and s_value is None:
+            if sensor['title'] == 'Temperatur' and sensor['lastMeasurement']['value'] is None:
                 return {"error": f"No value of last measurement for box {box_id}"}, 200
-            elif s_title == 'Temperatur': # Temperature value exists
+            if sensor['title'] == 'Temperatur': # Temperature value exists
+                temp_sensor = true
+                
                 # See if last measurement was within the last hour
                 measure_time = datetime.fromisoformat(sensor['lastMeasurement']['createdAt'])
                 time_diff = cur_time - measure_time
@@ -70,6 +70,9 @@ def temperature():
                 else:
                     created_at = sensor['lastMeasurement']['createdAt']
                     return {"error": f"Last value too old for {box_id}, {created_at}"}, 200
+                
+    if temp_sensor == false:
+        return {"error": "One or more boxes does not have a temperature sensor"}, 200
 
     # Divide the sum of all the temperatures by 3 to get the average
     avg = total/3

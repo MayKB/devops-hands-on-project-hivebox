@@ -1,6 +1,6 @@
 FROM python@sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a1bfc852199fbf
 
-RUN addgroup -S nonroot && adduser -S nonroot -G nonroot
+RUN addgroup --system nonroot && adduser --system nonroot --group nonroot
 
 USER nonroot
 
