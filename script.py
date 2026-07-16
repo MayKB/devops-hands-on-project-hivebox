@@ -32,47 +32,10 @@ def temperature():
 
     # For each of the given boxes:
     for box_id in ids:
-
-        try:
-            url = f'https://api.opensensemap.org/boxes/{box_id}?format=json'
-            sense = requests.get(url, timeout=10)
-            sense.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            return {"error": f"Could not reach API for box {box_id}: {e}"}, 502
-
-        # Get all sensors from sensebox
-        sensors = sense.json()['sensors']
-        temp_sensor = None
-
-        # Loop through each of the sensors to find the temperature sensor
-        for sensor in sensors:
-            if sensor['title'] == 'Temperatur':
-                temp_sensor = sensor
-
-        # If no temperature sensor was found, return and alert
-        if temp_sensor is None:
-            return {"error": "One or more boxes do not have a temperature sensor"}, 200
-
-        # If no last measurement was found, return and alert
-        if temp_sensor['lastMeasurement'] is None:
-            return {"error": f"No last measurement for box {box_id}"}, 200
-
-        s_created_at = temp_sensor['lastMeasurement']['createdAt']
-        s_value = temp_sensor['lastMeasurement']['value']
-
-        # If date or value for last measurement, return and alert
-        if s_created_at is None or s_value is None:
-            return {"error": f"Date or value missing for last measurement of box {box_id}"}, 200
-
-        # See if last measurement was within the last hour
-        measure_time = datetime.fromisoformat(s_created_at)
-        recent = (datetime.now(timezone.utc) - measure_time) < 3600
-
-        # If there is a recent temperature value, add its value to the sum
-        if recent:
-            total += float(s_value)
-        else:
-            return {"error": f"Last value too old for {box_id}, {s_created_at}"}, 200
+        if get_temp(box_id).isnumeric()
+            total += get_temp(box_id)
+        else
+            return get_temp(box_id)
 
     # Divide the sum of all the temperatures by 3 to get the average
     avg = total/3
@@ -88,6 +51,49 @@ def temperature():
     # Return the sum and average
     return {"boxid1": ids[0], "boxid2": ids[1], "boxid3": ids[2],
             "totaltemp": total, "averagetemp": avg, "status": status}
+
+def get_temp(box_id)
+    """Get the temperature value of the sensebox for the given ID"""
+    try:
+        url = f'https://api.opensensemap.org/boxes/{box_id}?format=json'
+        sense = requests.get(url, timeout=10)
+        sense.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        return {"error": f"Could not reach API for box {box_id}: {e}"}, 502
+
+    # Get all sensors from sensebox
+    sensors = sense.json()['sensors']
+    temp_sensor = None
+
+    # Loop through each of the sensors to find the temperature sensor
+    for sensor in sensors:
+        if sensor['title'] == 'Temperatur':
+            temp_sensor = sensor
+
+    # If no temperature sensor was found, return and alert
+    if temp_sensor is None:
+        return {"error": "One or more boxes do not have a temperature sensor"}, 200
+
+    # If no last measurement was found, return and alert
+    if temp_sensor['lastMeasurement'] is None:
+        return {"error": f"No last measurement for box {box_id}"}, 200
+
+    s_created_at = temp_sensor['lastMeasurement']['createdAt']
+    s_value = temp_sensor['lastMeasurement']['value']
+
+    # If date or value for last measurement, return and alert
+    if s_created_at is None or s_value is None:
+        return {"error": f"Date or value missing for last measurement of box {box_id}"}, 200
+
+    # See if last measurement was within the last hour
+    measure_time = datetime.fromisoformat(s_created_at)
+    recent = (datetime.now(timezone.utc) - measure_time) < 3600
+
+    # If there is a recent temperature value, add its value to the sum
+    if recent:
+        return float(s_value)
+    else:
+        return {"error": f"Last value too old for {box_id}, {s_created_at}"}, 200
 
 @app.route('/version', methods=['GET'])
 def version():
