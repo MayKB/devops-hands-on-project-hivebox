@@ -53,5 +53,7 @@ spec:
             name: hivebox-config
         image: ghcr.io/maykb/hivebox-image:latest
         name: hivebox
+        securityContext:
+          runAsNonRoot: true
       imagePullSecrets:
         - name: ghcr-secret
