@@ -85,5 +85,5 @@ jobs:
           pip install --only-binary :all: --require-hashes -r requirements.txt
       - name: Test with pytest
         run: |
-          pip install --only-binary :all: --require-hashes -r pylint-requirements.txt
+          pip install --only-binary :all: --require-hashes -r pytest-requirements.txt
           pytest tests/
