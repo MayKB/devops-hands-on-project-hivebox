@@ -53,5 +53,15 @@ spec:
             name: hivebox-config
         image: ghcr.io/maykb/hivebox-image:latest
         name: hivebox
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+        resources:
+          limits:
+            memory: 100Mi
+          requests:
+            cpu: 0.5
+            memory: 100Mi
+      automountServiceAccountToken: false
       imagePullSecrets:
         - name: ghcr-secret
