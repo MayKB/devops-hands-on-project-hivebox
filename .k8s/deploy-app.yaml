@@ -55,5 +55,6 @@ spec:
         name: hivebox
         securityContext:
           runAsNonRoot: true
+          allowPrivilegeEscalation: false
       imagePullSecrets:
         - name: ghcr-secret
