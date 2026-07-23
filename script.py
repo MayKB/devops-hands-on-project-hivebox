@@ -5,7 +5,7 @@ return metrics about the app and retrieve temperature data from three SenseBoxes
 ## https://stackoverflow.com/questions/76082808/how-to-get-github-repo-latest-release-in-python
 ## https://www.codecademy.com/article/python-environment-variables
 
-import os, traceback
+import os
 from datetime import datetime, timezone
 
 import requests
@@ -34,7 +34,6 @@ def temperature():
     for box_id in ids:
         result = get_temp(box_id)
         if isinstance(result, tuple): # Returned an error
-            log(traceback.format_exc())
             return f"An error has occured, temperature not read for box {box_id}"
         total += result
 
