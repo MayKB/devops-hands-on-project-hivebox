@@ -15,7 +15,21 @@ on:
     branches: [ "main" ]
 
 # Declare default permissions as read only.
-# permissions: read-all
+permissions:
+  actions: read
+  artifact-metadata: read
+  attestations: read
+  checks: read
+  code-quality: read
+  contents: read
+  deployments: read
+  issues: read
+  discussions: read
+  packages: read
+  pages: read
+  pull-requests: read
+  security-events: read
+  statuses: read
 
 jobs:
   analysis:
