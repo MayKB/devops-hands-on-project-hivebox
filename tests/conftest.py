@@ -1,7 +1,7 @@
 """Set up client for testing"""
 
 import pytest
-from script import app
+import script
 
 @pytest.fixture()
 def app():

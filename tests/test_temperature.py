@@ -9,10 +9,10 @@ import script
 
 def test_get_temp(monkeypatch):
     """Test to make sure temperature is returned"""
-    def mockreturn(box_id):
+    def mockreturn():
         return 20.0
 
-    monkeypatch.setattr(script, "get_temp", mockreturn(box_id))
+    monkeypatch.setattr(script, "get_temp", mockreturn())
 
     # ID doesn't matter here since return value has been patched
     x = script.get_temp(235235235)
