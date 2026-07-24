@@ -38,7 +38,7 @@ def test_temperature_cold(client, monkeypatch):
 def test_temperature_hot(client, monkeypatch):
     """Test to make sure "Too Hot" status is returned"""
 
-    monkeypatch.setattr(script, "get_temp", lambda box_id: 35.0)
+    monkeypatch.setattr(script, "get_temp", lambda box_id: 37.0)
 
     response = client.get("/temperature")
     assert response.json["status"] == "Too Hot"
