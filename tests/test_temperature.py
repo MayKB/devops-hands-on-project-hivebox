@@ -10,6 +10,7 @@ import script
 def test_get_temp(monkeypatch):
     """Test to make sure temperature is returned"""
     def mockreturn(box_id):
+        box_id = 1
         return 20.0
 
     monkeypatch.setattr(script, "get_temp", mockreturn)
