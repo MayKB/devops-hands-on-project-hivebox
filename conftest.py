@@ -1,18 +1,16 @@
 """Set up client for testing"""
 
 import pytest
-from script import app
+from script import app as flask_app
 
-# pylint: disable=redefined-outer-name
-# pylint: disable=function-redefined
-@pytest.fixture(config)
+@pytest.fixture()
 def app():
     """Enable testing for application"""
-    app.config.update({
+    flask_app.config.update({
         "TESTING": True,
     })
 
-    yield app
+    yield flask_app
 
 # pylint: disable=redefined-outer-name
 @pytest.fixture()
