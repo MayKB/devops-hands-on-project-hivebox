@@ -4,6 +4,7 @@ import pytest
 from script import app
 
 # pylint: disable=redefined-outer-name
+# pylint: disable=function-redefined
 @pytest.fixture()
 def app():
     """Enable testing for application"""
