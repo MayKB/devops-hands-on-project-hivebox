@@ -1,8 +1,8 @@
 """Set up client for testing"""
 
 import pytest
-import script
 
+# pylint: disable=redefined-outer-name
 @pytest.fixture()
 def app():
     """Enable testing for application"""
@@ -12,11 +12,13 @@ def app():
 
     yield app
 
+# pylint: disable=redefined-outer-name
 @pytest.fixture()
 def client(app):
     """Set up client"""
     return app.test_client()
 
+# pylint: disable=redefined-outer-name
 @pytest.fixture()
 def runner(app):
     """Set up runner"""
