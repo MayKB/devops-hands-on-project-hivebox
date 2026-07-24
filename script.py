@@ -34,7 +34,7 @@ def temperature():
     for box_id in ids:
         result = get_temp(box_id)
         if isinstance(result, tuple): # Returned an error
-            return result
+            return f"An error has occured, temperature not read for box {box_id}"
         total += result
 
     # Divide the sum of all the temperatures by 3 to get the average

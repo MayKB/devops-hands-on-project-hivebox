@@ -7,6 +7,22 @@ name: Lint Build and Test
 
 on: [push]
 
+permissions:
+  actions: read
+  artifact-metadata: read
+  attestations: read
+  checks: read
+  code-quality: read
+  contents: read
+  deployments: read
+  issues: read
+  discussions: read
+  packages: read
+  pages: read
+  pull-requests: read
+  security-events: read
+  statuses: read
+
 jobs:
   pylint:
     runs-on: ubuntu-latest
@@ -85,5 +101,4 @@ jobs:
           pip install --only-binary :all: --require-hashes -r requirements.txt
       - name: Test with pytest
         run: |
-          pip install --only-binary :all: --require-hashes -r pytest-requirements.txt
           pytest tests/
