@@ -5,7 +5,7 @@ from script import app
 
 # pylint: disable=redefined-outer-name
 # pylint: disable=function-redefined
-@pytest.fixture()
+@pytest.fixture(config)
 def app():
     """Enable testing for application"""
     app.config.update({
