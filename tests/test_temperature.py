@@ -15,7 +15,7 @@ def test_get_temp(monkeypatch):
     monkeypatch.setattr(script, "get_temp", mockreturn)
 
     # ID doesn't matter here since return value has been patched
-    x = script.get_temp(235235235)
+    x = script.get_temp()
     assert x == 20.0
 
 def test_temperature(client, monkeypatch):
