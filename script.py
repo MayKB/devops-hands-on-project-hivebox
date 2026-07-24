@@ -18,6 +18,7 @@ from prometheus_flask_exporter import PrometheusMetrics
 load_dotenv()
 
 app = Flask(__name__)
+app.config['TESTING'] = False
 csrf = CSRFProtect()
 csrf.init_app(app)
 

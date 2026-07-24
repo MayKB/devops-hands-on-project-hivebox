@@ -12,7 +12,7 @@ def test_get_temp(monkeypatch):
     def mockreturn():
         return 20.0
 
-    monkeypatch.setattr(script, "get_temp", mockreturn())
+    monkeypatch.setattr(script, "get_temp", mockreturn)
 
     # ID doesn't matter here since return value has been patched
     x = script.get_temp(235235235)
