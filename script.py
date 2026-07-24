@@ -81,7 +81,7 @@ def get_temp(box_id):
     s_created_at = temp_sensor['lastMeasurement']['createdAt']
     s_value = temp_sensor['lastMeasurement']['value']
 
-    # If date or value for last measurement, return and alert
+    # If no date or value for last measurement, return and alert
     if s_created_at is None or s_value is None:
         return {"error": f"Date or value missing for last measurement of box {box_id}"}, 200
 
