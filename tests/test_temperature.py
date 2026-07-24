@@ -5,7 +5,6 @@
 ## https://docs.pytest.org/en/stable/how-to/monkeypatch.html
 ## https://docs.pytest.org/en/stable/reference/reference.html#pytest.MonkeyPatch.setattr
 
-import requests
 import requests_mock
 
 import script
@@ -22,11 +21,11 @@ def test_get_temp(monkeypatch):
     x = script.get_temp(235235235)
     assert x == 20.0
 
-def test_get_temp_error(monkeypatch):
+def test_get_temp_error():
     """Test get_temp "Could not reach API" error"""
-    
+
     box_id = 'invalid'
-    
+
     with requests_mock.Mocker() as m:
         m.get(f'https://api.opensensemap.org/boxes/{box_id}?format=json', status_code=502)
         # x = requests.get(f'https://api.opensensemap.org/boxes/{box_id}?format=json').status_code
