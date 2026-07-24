@@ -1,6 +1,7 @@
 """Set up client for testing"""
 
 import pytest
+import script
 
 # pylint: disable=redefined-outer-name
 @pytest.fixture()
