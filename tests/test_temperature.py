@@ -5,8 +5,6 @@
 ## https://docs.pytest.org/en/stable/how-to/monkeypatch.html
 ## https://docs.pytest.org/en/stable/reference/reference.html#pytest.MonkeyPatch.setattr
 
-import json
-
 import requests
 import requests_mock
 
@@ -15,19 +13,25 @@ import script
 class MockNoSensors:
     """Mock a requests response that returns no sensors"""
     def raise_for_status(self):
+        """Mock raise_for_status"""
         pass
 
     # @staticmethod
+    # pylint: disable=unused-argument
     def json(self, boxid):
+        """Mock json with no sensors"""
         return {"mock_key": "mock_response"}
 
 class MockNoTempSensor:
     """Mock a requests response with no sensors named 'Temperatur'"""
     def raise_for_status(self):
+        """Mock raise_for_status"""
         pass
 
     # @staticmethod
+    # pylint: disable=unused-argument
     def json(self, boxid):
+        """Mock json with no sensors titled 'Temperatur'"""
         return { 'sensors': [{'title': 'No'}, {'title': 'Also no'}] }
 
 def test_get_temp(monkeypatch):

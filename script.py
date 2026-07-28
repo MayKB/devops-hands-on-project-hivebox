@@ -92,8 +92,10 @@ def get_temp(box_id):
     measure_time = datetime.fromisoformat(s_created_at)
     recent = (datetime.now(timezone.utc) - measure_time).total_seconds() < 3600
 
+    error_msg = f"Last value too old for {box_id}, {s_created_at}"
+
     # If there is a recent temperature value, return its value to be added
-    return float(s_value) if recent else {"error": f"Last value too old for {box_id}, {s_created_at}"}, 200
+    return float(s_value) if recent else {"error": error_msg}, 200
 
 @app.route('/version', methods=['GET'])
 def version():
