@@ -63,6 +63,21 @@ class MockNoTempValue:
                 }]
             }
 
+class MockTempOld:
+    """Mock a requests response for a temp measurement that's too old"""
+    def raise_for_status(self):
+        """Mock raise_for_status"""
+        # pylint: disable=unnecessary-pass
+        pass
+
+    # pylint: disable=unused-argument
+    def json(self):
+        """Mock json with old lastMeasurement value"""
+        return { 'sensors': [{'title': 'Temperatur', 'lastMeasurement':
+                    {'createdAt': '2024-07-28T19:11:18.246Z', 'value': '19.60'}
+                }]
+            }
+
 def test_get_temp(monkeypatch):
     """Test to make sure temperature is returned"""
     # pylint: disable=unused-argument
@@ -129,6 +144,17 @@ def test_get_temp_no_temp_value(monkeypatch):
 
     x = script.get_temp(23452345235)
     assert "Date or value missing for last measurement of box" in x[0]['error']
+
+def test_get_temp_no_temp_value_old(monkeypatch):
+    """Test get_temp lastMeasurement value too old"""
+    # pylint: disable=unused-argument
+    def mock_get(url, timeout):
+        return MockTempOld()
+
+    monkeypatch.setattr(requests, "get", mock_get)
+
+    x = script.get_temp(23452345235)
+    assert "Last value too old for" in x[0]['error']
 
 def test_temperature_good(client, monkeypatch):
     """Test to make sure "Good" status is returned"""
