@@ -14,11 +14,12 @@ class MockNoSensors:
     """Mock a requests response that returns no sensors"""
     def raise_for_status(self):
         """Mock raise_for_status"""
+        # pylint: disable=unnecessary-pass
         pass
 
     # @staticmethod
     # pylint: disable=unused-argument
-    def json(self, boxid):
+    def json(self):
         """Mock json with no sensors"""
         return {"mock_key": "mock_response"}
 
@@ -26,11 +27,12 @@ class MockNoTempSensor:
     """Mock a requests response with no sensors named 'Temperatur'"""
     def raise_for_status(self):
         """Mock raise_for_status"""
+        # pylint: disable=unnecessary-pass
         pass
 
     # @staticmethod
     # pylint: disable=unused-argument
-    def json(self, boxid):
+    def json(self):
         """Mock json with no sensors titled 'Temperatur'"""
         return { 'sensors': [{'title': 'No'}, {'title': 'Also no'}] }
 
@@ -59,22 +61,24 @@ def test_get_temp_error():
 
 def test_get_temp_no_sensors(monkeypatch):
     """Test get_temp no sensors error"""
-    def mock_get():
+    # pylint: disable=unused-argument
+    def mock_get(url, timeout):
         return MockNoSensors()
 
     monkeypatch.setattr(requests, "get", mock_get)
 
-    x = script.get_temp(346345635)
+    x = script.get_temp(23452345235)
     assert "does not have any sensors" in x[0]['error']
 
 def test_get_temp_no_temp_sensor(monkeypatch):
     """Test get_temp no sensors named 'Temperatur' error"""
-    def mock_get():
+    # pylint: disable=unused-argument
+    def mock_get(url, timeout):
         return MockNoTempSensor()
 
     monkeypatch.setattr(requests, "get", mock_get)
 
-    x = script.get_temp(346345635)
+    x = script.get_temp(23452345235)
     assert "do not have a temperature sensor" in x[0]['error']
 
 def test_temperature_good(client, monkeypatch):
