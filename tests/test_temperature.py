@@ -5,26 +5,29 @@
 ## https://docs.pytest.org/en/stable/how-to/monkeypatch.html
 ## https://docs.pytest.org/en/stable/reference/reference.html#pytest.MonkeyPatch.setattr
 
+import json
+
 import requests
 import requests_mock
 
-import json
 import script
 
 class MockNoSensors:
+    """Mock a requests response that returns no sensors"""
     def raise_for_status(self):
         pass
 
     # @staticmethod
-    def json(boxid):
+    def json(self, boxid):
         return {"mock_key": "mock_response"}
 
 class MockNoTempSensor:
+    """Mock a requests response with no sensors named 'Temperatur'"""
     def raise_for_status(self):
         pass
 
     # @staticmethod
-    def json(boxid):
+    def json(self, boxid):
         return { 'sensors': [{'title': 'No'}, {'title': 'Also no'}] }
 
 def test_get_temp(monkeypatch):
@@ -51,7 +54,8 @@ def test_get_temp_error():
     assert 502 in x
 
 def test_get_temp_no_sensors(monkeypatch):
-    def mock_get(*args, **kwargs):
+    """Test get_temp no sensors error"""
+    def mock_get():
         return MockNoSensors()
 
     monkeypatch.setattr(requests, "get", mock_get)
@@ -60,7 +64,8 @@ def test_get_temp_no_sensors(monkeypatch):
     assert "does not have any sensors" in x[0]['error']
 
 def test_get_temp_no_temp_sensor(monkeypatch):
-    def mock_get(*args, **kwargs):
+    """Test get_temp no sensors named 'Temperatur' error"""
+    def mock_get():
         return MockNoTempSensor()
 
     monkeypatch.setattr(requests, "get", mock_get)

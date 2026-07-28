@@ -63,7 +63,7 @@ def get_temp(box_id):
 
     if "sensors" not in sense.json():
         return {"error": f"{box_id} does not have any sensors"}, 200
-    
+
     # Get all sensors from sensebox
     sensors = sense.json()['sensors']
     temp_sensor = None
@@ -92,11 +92,8 @@ def get_temp(box_id):
     measure_time = datetime.fromisoformat(s_created_at)
     recent = (datetime.now(timezone.utc) - measure_time).total_seconds() < 3600
 
-    # If there is a recent temperature value, add its value to the sum
-    if recent:
-        return float(s_value)
-
-    return {"error": f"Last value too old for {box_id}, {s_created_at}"}, 200
+    # If there is a recent temperature value, return its value to be added
+    return float(s_value) if recent else {"error": f"Last value too old for {box_id}, {s_created_at}"}, 200
 
 @app.route('/version', methods=['GET'])
 def version():
