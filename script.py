@@ -61,6 +61,9 @@ def get_temp(box_id):
     except requests.exceptions.RequestException as e:
         return {"error": f"Could not reach API for box {box_id}: {e}"}, 502
 
+    if "sensors" not in sense.json():
+        return {"error": f"{box_id} does not have any sensors"}, 200
+
     # Get all sensors from sensebox
     sensors = sense.json()['sensors']
     temp_sensor = None
@@ -75,25 +78,32 @@ def get_temp(box_id):
         return {"error": "One or more boxes do not have a temperature sensor"}, 200
 
     # If no last measurement was found, return and alert
-    if temp_sensor['lastMeasurement'] is None:
+    if "lastMeasurement" not in temp_sensor or temp_sensor['lastMeasurement'] is None:
         return {"error": f"No last measurement for box {box_id}"}, 200
 
-    s_created_at = temp_sensor['lastMeasurement']['createdAt']
-    s_value = temp_sensor['lastMeasurement']['value']
+    no_date_or_value = False
+    last = temp_sensor['lastMeasurement']
+    s_created_at = None
+    s_value = None
 
-    # If date or value for last measurement, return and alert
-    if s_created_at is None or s_value is None:
+    if 'createdAt' not in last or 'value' not in last:
+        no_date_or_value = True
+    else:
+        s_created_at = temp_sensor['lastMeasurement']['createdAt']
+        s_value = temp_sensor['lastMeasurement']['value']
+
+    # If no date or value for last measurement, return and alert
+    if s_created_at is None or s_value is None or no_date_or_value:
         return {"error": f"Date or value missing for last measurement of box {box_id}"}, 200
 
     # See if last measurement was within the last hour
     measure_time = datetime.fromisoformat(s_created_at)
     recent = (datetime.now(timezone.utc) - measure_time).total_seconds() < 3600
 
-    # If there is a recent temperature value, add its value to the sum
-    if recent:
-        return float(s_value)
+    error_msg = f"Last value too old for {box_id}, {s_created_at}"
 
-    return {"error": f"Last value too old for {box_id}, {s_created_at}"}, 200
+    # If there is a recent temperature value, return its value to be added
+    return float(s_value) if recent else {"error": error_msg}, 200
 
 @app.route('/version', methods=['GET'])
 def version():
