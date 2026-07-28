@@ -5,9 +5,27 @@
 ## https://docs.pytest.org/en/stable/how-to/monkeypatch.html
 ## https://docs.pytest.org/en/stable/reference/reference.html#pytest.MonkeyPatch.setattr
 
+import requests
 import requests_mock
 
+import json
 import script
+
+class MockNoSensors:
+    def raise_for_status(self):
+        pass
+
+    # @staticmethod
+    def json(boxid):
+        return {"mock_key": "mock_response"}
+
+class MockNoTempSensor:
+    def raise_for_status(self):
+        pass
+
+    # @staticmethod
+    def json(boxid):
+        return { 'sensors': [{'title': 'No'}, {'title': 'Also no'}] }
 
 def test_get_temp(monkeypatch):
     """Test to make sure temperature is returned"""
@@ -28,14 +46,27 @@ def test_get_temp_error():
 
     with requests_mock.Mocker() as m:
         m.get(f'https://api.opensensemap.org/boxes/{box_id}?format=json', status_code=502)
-        # x = requests.get(f'https://api.opensensemap.org/boxes/{box_id}?format=json').status_code
         x = script.get_temp(box_id)
 
-    # requests_mock.GET(f'https://api.opensensemap.org/boxes/{box_id}?format=json', status_code=502)
-
-    # x = script.get_temp(box_id).status_code
-
     assert 502 in x
+
+def test_get_temp_no_sensors(monkeypatch):
+    def mock_get(*args, **kwargs):
+        return MockNoSensors()
+
+    monkeypatch.setattr(requests, "get", mock_get)
+
+    x = script.get_temp(346345635)
+    assert "does not have any sensors" in x[0]['error']
+
+def test_get_temp_no_temp_sensor(monkeypatch):
+    def mock_get(*args, **kwargs):
+        return MockNoTempSensor()
+
+    monkeypatch.setattr(requests, "get", mock_get)
+
+    x = script.get_temp(346345635)
+    assert "do not have a temperature sensor" in x[0]['error']
 
 def test_temperature_good(client, monkeypatch):
     """Test to make sure "Good" status is returned"""

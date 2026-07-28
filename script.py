@@ -61,6 +61,9 @@ def get_temp(box_id):
     except requests.exceptions.RequestException as e:
         return {"error": f"Could not reach API for box {box_id}: {e}"}, 502
 
+    if "sensors" not in sense.json():
+        return {"error": f"{box_id} does not have any sensors"}, 200
+    
     # Get all sensors from sensebox
     sensors = sense.json()['sensors']
     temp_sensor = None
