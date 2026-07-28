@@ -179,3 +179,12 @@ def test_temperature_hot(client, monkeypatch):
 
     response = client.get("/temperature")
     assert response.json["status"] == "Too Hot"
+
+def test_temperature_bad(client, monkeypatch):
+    """Test to make sure error is return from get_temp to /temperature"""
+
+    monkeypatch.setattr(script, "get_temp", lambda box_id: ({"error": "a"}, 200))
+
+    response = client.get("/temperature")
+
+    assert "An error has occured" in response.text
