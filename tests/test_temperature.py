@@ -36,6 +36,33 @@ class MockNoTempSensor:
         """Mock json with no sensors titled 'Temperatur'"""
         return { 'sensors': [{'title': 'No'}, {'title': 'Also no'}] }
 
+class MockNoTempLast:
+    """Mock a requests response no lastMeasurement for the Temperatur sensor"""
+    def raise_for_status(self):
+        """Mock raise_for_status"""
+        # pylint: disable=unnecessary-pass
+        pass
+
+    # pylint: disable=unused-argument
+    def json(self):
+        """Mock json with no sensors titled 'Temperatur'"""
+        return { 'sensors': [{'title': 'Temperatur'}, {'title': 'Also no'}] }
+
+class MockNoTempValue:
+    """Mock a requests response with no value for lastMeasurement"""
+    def raise_for_status(self):
+        """Mock raise_for_status"""
+        # pylint: disable=unnecessary-pass
+        pass
+
+    # pylint: disable=unused-argument
+    def json(self):
+        """Mock json with no lastMeasurement value"""
+        return { 'sensors': [{'title': 'Temperatur', 'lastMeasurement':
+                    {'createdAt': '2026-07-28T19:11:18.246Z'}
+                }]
+            }
+
 def test_get_temp(monkeypatch):
     """Test to make sure temperature is returned"""
     # pylint: disable=unused-argument
@@ -80,6 +107,28 @@ def test_get_temp_no_temp_sensor(monkeypatch):
 
     x = script.get_temp(23452345235)
     assert "do not have a temperature sensor" in x[0]['error']
+
+def test_get_temp_no_temp_measurement(monkeypatch):
+    """Test get_temp no lastMeasurement error"""
+    # pylint: disable=unused-argument
+    def mock_get(url, timeout):
+        return MockNoTempLast()
+
+    monkeypatch.setattr(requests, "get", mock_get)
+
+    x = script.get_temp(23452345235)
+    assert "No last measurement for box" in x[0]['error']
+
+def test_get_temp_no_temp_value(monkeypatch):
+    """Test get_temp no value for lastMeasurement"""
+    # pylint: disable=unused-argument
+    def mock_get(url, timeout):
+        return MockNoTempValue()
+
+    monkeypatch.setattr(requests, "get", mock_get)
+
+    x = script.get_temp(23452345235)
+    assert "Date or value missing for last measurement of box" in x[0]['error']
 
 def test_temperature_good(client, monkeypatch):
     """Test to make sure "Good" status is returned"""
