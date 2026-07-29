@@ -4,3 +4,4 @@ venv/
 .env
 notes/
 scripts/
+requirements/version/
