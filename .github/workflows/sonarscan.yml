@@ -44,8 +44,8 @@ jobs:
     - name: Install dependencies
       run: |
           python -m pip install --require-hashes --upgrade pip
-          pip install --only-binary :all: --require-hashes -r app-requirements.txt
-          pip install --only-binary :all: --require-hashes -r test-and-scan-requirements.txt
+          pip install --only-binary :all: --require-hashes -r requirements/app-requirements.txt
+          pip install --only-binary :all: --require-hashes -r requirements/test-and-scan-requirements.txt
 
     - name: Run tests with coverage
       run: pytest --cov=. --cov-report=xml
