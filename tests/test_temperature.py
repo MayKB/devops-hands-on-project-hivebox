@@ -5,6 +5,8 @@
 ## https://docs.pytest.org/en/stable/how-to/monkeypatch.html
 ## https://docs.pytest.org/en/stable/reference/reference.html#pytest.MonkeyPatch.setattr
 
+import math
+
 import requests
 import requests_mock
 
@@ -88,7 +90,7 @@ def test_get_temp(monkeypatch):
 
     # ID doesn't matter here since return value has been patched
     x = script.get_temp(235235235)
-    assert x == 20.0
+    assert math.isclose(x, 20.0, rel_tol=1e-09, abs_tol=1e-09)
 
 def test_get_temp_error():
     """Test get_temp "Could not reach API" error"""
