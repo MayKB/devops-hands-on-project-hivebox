@@ -11,3 +11,5 @@ USER nonrootu
 
 COPY script.py .
 CMD ["flask", "--app", "script", "run", "--host", "0.0.0.0"]
+
+HEALTHCHECK CMD command

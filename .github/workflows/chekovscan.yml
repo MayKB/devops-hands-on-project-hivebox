@@ -1,0 +1,44 @@
+name: Checkov
+
+on: 
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  artifact-metadata: read
+  attestations: read
+  checks: read
+  code-quality: read
+  contents: read
+  deployments: read
+  issues: read
+  discussions: read
+  packages: read
+  pages: read
+  pull-requests: read
+  security-events: read
+  statuses: read
+
+jobs:
+  scan:
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a # v7.0.1
+      - name: Checkov GitHub Action
+        uses: bridgecrewio/checkov-action@7b972723c44fb3d256283fac96fae5d7c1894bb7 # v12.1347.0
+        with:
+          output_format: cli,sarif
+          output_file_path: console,results.sarif
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@f02afd42b08e9c7fd2198fe321a96e6b3867a0fd # v4.37.3
+        if: success() || failure()
+        with:
+          sarif_file: results.sarif
