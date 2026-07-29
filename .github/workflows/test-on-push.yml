@@ -31,17 +31,20 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.12", "3.13", "3.14"]
+
     steps:
     - uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a # v7.0.1
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: Install dependencies
       run: |
         python -m pip install --require-hashes --upgrade pip
-        pip install --only-binary :all: --require-hashes -r pylint-requirements.txt
-        pip install --only-binary :all: --require-hashes -r requirements.txt
+        pip install --only-binary :all: --require-hashes -r ./requirements/app-requirements.txt
+        pip install --only-binary :all: --require-hashes -r ./requirements/pylint-requirements.txt
+
     - name: Analysing the code with pylint
       run: |
         pylint $(git ls-files '*.py')
@@ -50,6 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
         contents: read
+
     steps:
       - uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a # v7.0.1
       - uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.0.0
@@ -65,11 +69,12 @@ jobs:
         image: registry:3
         ports:
           - 5000:5000
+
     steps:
       - uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a # v7.0.1
       - name: Set up QEMU
         uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
         with:
@@ -89,16 +94,20 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
         contents: read
+
     steps:
       - uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a # v7.0.1
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: '3.x'
+
       - name: Install dependencies
         run: |
           python -m pip install --require-hashes --upgrade pip
-          pip install --only-binary :all: --require-hashes -r sonar-requirements.txt
+          pip install --only-binary :all: --require-hashes -r ./requirements/app-requirements.txt
+          pip install --only-binary :all: --require-hashes -r ./requirements/test-and-scan-requirements.txt
+
       - name: Test with pytest
         run: |
           pytest tests/
