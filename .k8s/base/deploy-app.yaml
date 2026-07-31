@@ -51,7 +51,7 @@ spec:
         envFrom:
         - configMapRef:
             name: hivebox-config
-        image: ghcr.io/maykb/hivebox-image:latest
+        image: ghcr.io/maykb/hivebox-image:placeholder
         name: hivebox
         securityContext:
           runAsNonRoot: true
