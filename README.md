@@ -88,13 +88,14 @@ SENSEBOX_ID_3=5ade1acf223bd80019a1011c
   - If you are using a proper Linux distribution, run `docker run -d --name cloud-provider-kind --rm --network host -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:${VERSION}`
   - If you are on a Mac or using WSL 2, run `sudo docker run -d --name cloud-provider-kind --privileged --rm --network host -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:${VERSION} --enable-lb-port-mapping` and enter your password if prompted
 - Verify that cloud-provider-kind is running with `docker ps --filter name=cloud-provider-kind`. You can also check the logs with `docker logs cloud-provider-kind`
-- Apply the cloud-provider-kind manifest file with `kubectl apply -f .k8s/deploy-cloud.yaml`
+- Apply the cloud-provider-kind manifest file with `kubectl apply -f .k8s/base/deploy-cloud.yaml`
 - Verify the gateway was created properly by running `kubectl get gateway -n gateway-infra gateway`. Look for `PROGRAMMED: True` to confirm.
 - To build the image, navigate to the project folder and run `docker build -t <image name> .`
-- Tag the image using `docker tag <image name> ghcr.io/<lowercase github username/org name>/<image name>:latest`
-- Push to GitHub Container Registry using `docker push ghcr.io/<lowercase github username/org name>/<image name>:latest`
-- Update `.k8s/deploy-app.yaml` to use `image: ghcr.io/<lowercase github username/org name>/<image name>:latest`
-- Apply the app deploy manifest file with `kubectl apply -f .k8s/deploy-app.yaml`
+- Tag the image using `docker tag <image name> ghcr.io/<lowercase github username/org name>/<image name>:local-test`
+- Push to GitHub Container Registry using `docker push ghcr.io/<lowercase github username/org name>/<image name>:local-test`
+- Update `.k8s/base/deploy-app.yaml` to use `image: ghcr.io/<lowercase github username/org name>/<image name>:placeholder`
+- Update `.k8s/overlays/dev/kustomization.yaml` to use `name: ghcr.io/<lowercase github username/org name>/<image name>`
+- Apply the app deploy manifest file with `kubectl apply -k .k8s/overlays/dev/`
 - Apply your env variables as a configmap using `kubectl create configmap hivebox-config --from-env-file=.env -n hivebox-namespace`
 - Create a secret to allow you to pull from the registry by running
 ````
@@ -104,7 +105,7 @@ kubectl create secret docker-registry ghcr-secret \
   --docker-password=<token> \
   -n hivebox-namespace
 ````
-- Apply the http routing manifest file with `kubectl apply -f .k8s/http-route.yaml`
+- Apply the http routing manifest file with `kubectl apply -f .k8s/base/http-route.yaml`
 - Test the application with `curl`
   - If using a proper linux distribution, run `GW_ADDR=$(kubectl get gateway -n gateway-infra gateway -o jsonpath='{.status.addresses[0].value}')` to set the IP address, then run `curl --resolve some.exampledomain.example:80:${GW_ADDR}/metrics http://some.exampledomain.example` to test the `/metrics` endpoint. The same can be done for `/version` and `/temperature`.
   - If using WSL2, first find the ephemeral port by running `docker ps` then finding the `0.0.0.0:<ephemeral port>->80/tcp` address that belongs to the `envoyproxy/envoy` image. Then test the `metrics` endpoint with `curl -v --max-time 15 -H "Host: some.exampledomain.example" http://localhost:<port>/metrics`. The same can be done for `/version` and `/temperature`. It may take up to a minute for it to start connecting properly, so if you get an error give it some time before trying again.
@@ -118,3 +119,8 @@ kubectl delete namespace hivebox-namespace
 ````
 - Stop and remove cloud-provider-kind with `docker stop cloud-provider-kind`
 - Delete the kind cluster with `kind delete cluster`
+
+### Troubleshooting
+
+- If you get the error `Unable to find image 'registry.k8s.io/cloud-provider-kind/cloud-controller-manager:latest'` after running the `sudo docker run [...]` command, there may be an issue with the GitHub API. Run `curl -s -L -o /dev/null -w '%{http_code} %{url_effective}\n' https://github.com/kubernetes-sigs/cloud-provider-kind/releases/latest` until you get a `200` status response, then rerun the `sudo docker run [...]` command.
+- If you get the error `error from registry: unauthorized` after running the `docker tag [...]` or `docker push [...]` commands, run `docker login ghcr.io` and log in to the GitHub Container Registry with your GitHub username and the same personal access token you will use in the `kubectl create secret [...]` command. This is a classic Personal Access Token that requires `delete:packages`, `repo` and `write:packages` permissions.

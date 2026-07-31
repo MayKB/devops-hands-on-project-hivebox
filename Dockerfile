@@ -5,9 +5,8 @@ WORKDIR /app
 COPY requirements/ .
 RUN pip install --only-binary :all: --require-hashes --no-cache-dir -r app-requirements.txt \
     && addgroup nonrootg \
-    && adduser nonrootu \
-    && usermod -a -G nonrootg nonrootu
-USER nonrootu
+    && adduser --uid 1000 --ingroup nonrootg --disabled-password --gecos "" nonrootu
+USER 1000
 
 COPY script.py .
 CMD ["flask", "--app", "script", "run", "--host", "0.0.0.0"]
