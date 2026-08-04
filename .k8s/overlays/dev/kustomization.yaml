@@ -6,3 +6,10 @@ resources:
 images:
 - name: ghcr.io/maykb/hivebox-image
   newTag: local-test
+
+# helmCharts:
+# - name: valkey
+#   valuesFile: valkey-values.yaml
+#   releaseName: valkey-helm
+#   version: 9.1.1
+#   repo: https://hub.docker.com/r/valkey/valkey/

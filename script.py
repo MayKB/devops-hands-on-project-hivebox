@@ -9,6 +9,7 @@ import os
 from datetime import datetime, timezone
 
 import requests
+import valkey
 from dotenv import load_dotenv
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
@@ -20,6 +21,8 @@ load_dotenv()
 app = Flask(__name__)
 csrf = CSRFProtect()
 csrf.init_app(app)
+
+r = valkey.Valkey(host="valkey.hivebox-namespace.svc.cluster.local", port=6379, db=0)
 
 @app.route("/temperature", methods=['GET'])
 def temperature():
@@ -36,6 +39,12 @@ def temperature():
         if isinstance(result, tuple): # Returned an error
             return f"An error has occured, temperature not read for box {box_id}"
         total += result
+        # Make sure result will be cached as a float
+        cache_result = float(result)
+        # Set value in valkey cache for that box id
+        r.set(box_id, cache_result)
+        # Expire after 1 minute
+        r.expire(box_id, 300)
 
     # Divide the sum of all the temperatures by 3 to get the average
     avg = total/3
@@ -54,6 +63,11 @@ def temperature():
 
 def get_temp(box_id):
     """Get the temperature value of the sensebox for the given ID"""
+    
+    # If value for that box already exists in Valkey cache, return it
+    if r.get(box_id):
+        return float(r.get(box_id))
+    
     try:
         url = f'https://api.opensensemap.org/boxes/{box_id}?format=json'
         sense = requests.get(url, timeout=10)

@@ -5,3 +5,5 @@ venv/
 notes/
 scripts/
 requirements/version/
+vendor/
+helm-chart/templates/config.json
