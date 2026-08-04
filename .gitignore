@@ -6,4 +6,4 @@ notes/
 scripts/
 requirements/version/
 vendor/
-helm-chart/templates/config.json
+helm-chart/values.yaml
