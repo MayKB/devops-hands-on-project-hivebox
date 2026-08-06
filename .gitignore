@@ -6,4 +6,4 @@ notes/
 scripts/
 requirements/version/
 vendor/
-helm-chart/values.yaml
+helm-chart/templates/configmap.yaml

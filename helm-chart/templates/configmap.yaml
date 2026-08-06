@@ -1,9 +1,0 @@
-# https://stackoverflow.com/questions/53429486/kubernetes-how-to-define-configmap-built-using-a-file-in-a-yaml
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Release.Name }}-configmap
-data:
-  config.json: |-
-{{ .Files.Get "config.json" | indent 4 }}

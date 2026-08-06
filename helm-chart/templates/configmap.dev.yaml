@@ -1,0 +1,8 @@
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: {{ .Release.Name }}-configmap
+# data:
+#   SENSEBOX_ID_1: 
+#   SENSEBOX_ID_2: 
+#   SENSEBOX_ID_3: 

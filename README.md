@@ -60,6 +60,8 @@ In its current state, three endpoints can be accessed using Flask.
 - **/version:** Gets the current version of the project on GitHub
 - **/metrics:** Gets Prometheus metrics about the app
 
+Note that this app was built and tested using WSL2.
+
 ### Prerequisites
 
 - Docker
@@ -74,17 +76,15 @@ In its current state, three endpoints can be accessed using Flask.
 - Clone the repository by opening a terminal and running `git clone https://github.com/MayKB/devops-hands-on-project-hivebox.git`
 - Make sure Docker is running and has Kubernetes enabled
   - If using WSL, make sure `Enable integration with my default WSL distro` is set in Settings > Resources > WSL integration
-- Create a file called `config.json` in `helm-chart/templates`, and input three SenseBox IDs using the following format:
+- Make a copy of `helm-chart/templates/configmap.dev.yaml` and name it `configmap.yaml`.
+  - Uncomment all the lines and update the three SenseBox IDs at the bottom to something like:
 ````
-{
-    "SENSEBOX_ID_1": "5eba5fbad46fb8001b799786",
-    "SENSEBOX_ID_2": "5c21ff8f919bf8001adf2488",
-    "SENSEBOX_ID_3": "609846401c3320001cc1dee2"
-}
+data:
+  SENSEBOX_ID_1: 5eba5fbad46fb8001b799786
+  SENSEBOX_ID_2: 5c21ff8f919bf8001adf2488
+  SENSEBOX_ID_3: 609846401c3320001cc1dee2
 ````
-<!-- - Update `.k8s/base/deploy-app.yaml` to use `image: ghcr.io/<lowercase github username/org name>/<image name>:placeholder` -->
-<!-- - Update `.k8s/overlays/dev/kustomization.yaml` to use `name: ghcr.io/<lowercase github username/org name>/<image name>` -->
-- Update `image.repository` in `helm-chart/values.yaml` to `repository: ghcr.io/<lowercase github username/org name>/<image name>`
+- In `values.yaml`, update `image.repository` to `repository: ghcr.io/<lowercase github username/org name>/<image name>`
 
 ### Local Execution
 
@@ -108,9 +108,10 @@ kubectl create secret docker-registry ghcr-secret \
   --docker-password=<token> \
   -n hivebox-namespace
 ````
-- Test the application with `curl`
-  - If using a proper linux distribution, run `GW_ADDR=$(kubectl get gateway -n gateway-infra gateway -o jsonpath='{.status.addresses[0].value}')` to set the IP address, then run `curl --resolve some.exampledomain.example:80:${GW_ADDR}/metrics http://some.exampledomain.example` to test the `/metrics` endpoint. The same can be done for `/version` and `/temperature`.
-  - If using WSL2, first find the ephemeral port by running `docker ps` then finding the `0.0.0.0:<ephemeral port>->80/tcp` address that belongs to the `envoyproxy/envoy` image. Then test the `metrics` endpoint with `curl -v --max-time 15 -H "Host: some.exampledomain.example" http://localhost:<port>/metrics`. The same can be done for `/version` and `/temperature`. It may take up to a minute for it to start connecting properly, so if you get an error give it some time before trying again.
+- Test the application with `curl`. If using WSL2, follow these steps:
+  - Resolve the ip address `127.0.0.1` to `some.exampledomain.example` by editing the `/etc/hosts` file to include `127.0.0.1  some.exampledomain.example` under the already existing rows.
+  - Find the ephemeral Envoy port by running `docker ps` then finding the `0.0.0.0:<ephemeral port>->80/tcp` address that belongs to the `envoyproxy/envoy` image.
+  - Test any endpoint with `curl -v --max-time 25 http://some.exampledomain.example:<port>/<endpoint>`. It may take up to a minute for it to start connecting properly, so if you get an error give it some time before trying again.
 
 ### Cleanup
 
