@@ -24,10 +24,11 @@ csrf.init_app(app)
 
 r = valkey.Valkey(host="hivebox-helm-valkey.hivebox-namespace.svc.cluster.local", port=6379, db=0)
 
-@app.route("/print", methods=['GET'])
-def print():
-    """print env vars"""
-    return {"box1": os.getenv("SENSEBOX_ID_1")}
+# Used for testing
+# @app.route("/print", methods=['GET'])
+# def print():
+#     """print env vars"""
+#     return {"box1": os.getenv("SENSEBOX_ID_1")}
 
 @app.route("/temperature", methods=['GET'])
 def temperature():
@@ -66,13 +67,17 @@ def temperature():
     return {"boxid1": ids[0], "boxid2": ids[1], "boxid3": ids[2],
             "totaltemp": total, "averagetemp": avg, "status": status}
 
-def get_temp(box_id):
-    """Get the temperature value of the sensebox for the given ID"""
-    
+def check_cache(box_id):
+    """Check Valkey for a cached value"""
+
     # If value for that box already exists in Valkey cache, return it
     if r.get(box_id):
         return float(r.get(box_id))
-    
+
+    return get_temp(box_id)
+
+def get_temp(box_id):
+    """Get the temperature value of the sensebox for the given ID"""
     try:
         url = f'https://api.opensensemap.org/boxes/{box_id}?format=json'
         sense = requests.get(url, timeout=10)
