@@ -54,9 +54,11 @@ spec:
         resources:
           limits:
             memory: 200Mi
+            ephemeral-storage: "4Gi"
           requests:
             cpu: 0.5
             memory: 200Mi
+            ephemeral-storage: "2Gi"
       automountServiceAccountToken: false
       imagePullSecrets:
         - name: ghcr-secret

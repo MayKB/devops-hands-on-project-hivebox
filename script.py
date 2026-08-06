@@ -77,7 +77,7 @@ def get_temp(box_id):
         url = f'https://api.opensensemap.org/boxes/{box_id}?format=json'
         sense = requests.get(url, timeout=10)
         sense.raise_for_status()
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
         return "Could not reach API for box"
 
     if "sensors" not in sense.json():
