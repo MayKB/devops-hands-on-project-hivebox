@@ -32,7 +32,8 @@ csrf.init_app(app)
 def temperature():
     """Get sensebox data and return average temperature from the last hour"""
 
-    r = valkey.Valkey(host="hivebox-helm-valkey.hivebox-namespace.svc.cluster.local", port=6379, db=0)
+    hostname = "hivebox-helm-valkey.hivebox-namespace.svc.cluster.local"
+    r = valkey.Valkey(host=hostname, port=6379, db=0)
 
     # Ids for senseboxes, given by tutorial
     ids = [os.getenv("SENSEBOX_ID_1"), os.getenv("SENSEBOX_ID_2"), os.getenv("SENSEBOX_ID_3")]
