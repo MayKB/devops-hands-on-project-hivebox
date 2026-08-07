@@ -41,7 +41,7 @@ def temperature():
 
     # For each of the given boxes:
     for box_id in ids:
-        result = get_temp(box_id)
+        result = check_cache(box_id)
         if isinstance(result, str): # Returned an error
             return {"error": f"{result} | {box_id}"}
         total += result
