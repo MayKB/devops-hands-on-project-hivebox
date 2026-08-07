@@ -101,7 +101,7 @@ def test_get_temp_error():
         m.get(f'https://api.opensensemap.org/boxes/{box_id}?format=json', status_code=502)
         x = script.get_temp(box_id)
 
-    assert 502 in x
+    assert "Could not reach API" in x
 
 def test_get_temp_no_sensors(monkeypatch):
     """Test get_temp no sensors error"""
@@ -112,7 +112,7 @@ def test_get_temp_no_sensors(monkeypatch):
     monkeypatch.setattr(requests, "get", mock_get)
 
     x = script.get_temp(23452345235)
-    assert "does not have any sensors" in x[0]['error']
+    assert "does not have any sensors" in x
 
 def test_get_temp_no_temp_sensor(monkeypatch):
     """Test get_temp no sensors named 'Temperatur' error"""
@@ -123,7 +123,7 @@ def test_get_temp_no_temp_sensor(monkeypatch):
     monkeypatch.setattr(requests, "get", mock_get)
 
     x = script.get_temp(23452345235)
-    assert "do not have a temperature sensor" in x[0]['error']
+    assert "do not have a temperature sensor" in x
 
 def test_get_temp_no_temp_measurement(monkeypatch):
     """Test get_temp no lastMeasurement error"""
@@ -134,7 +134,7 @@ def test_get_temp_no_temp_measurement(monkeypatch):
     monkeypatch.setattr(requests, "get", mock_get)
 
     x = script.get_temp(23452345235)
-    assert "No last measurement for box" in x[0]['error']
+    assert "No last measurement for box" in x
 
 def test_get_temp_no_temp_value(monkeypatch):
     """Test get_temp no value for lastMeasurement"""
@@ -145,7 +145,7 @@ def test_get_temp_no_temp_value(monkeypatch):
     monkeypatch.setattr(requests, "get", mock_get)
 
     x = script.get_temp(23452345235)
-    assert "Date or value missing for last measurement of box" in x[0]['error']
+    assert "Date or value missing for last measurement of box" in x
 
 def test_get_temp_no_temp_value_old(monkeypatch):
     """Test get_temp lastMeasurement value too old"""
@@ -156,7 +156,7 @@ def test_get_temp_no_temp_value_old(monkeypatch):
     monkeypatch.setattr(requests, "get", mock_get)
 
     x = script.get_temp(23452345235)
-    assert "Last value too old for" in x[0]['error']
+    assert "Last value too old" in x
 
 def test_temperature_good(client, monkeypatch):
     """Test to make sure "Good" status is returned"""
@@ -183,10 +183,10 @@ def test_temperature_hot(client, monkeypatch):
     assert response.json["status"] == "Too Hot"
 
 def test_temperature_bad(client, monkeypatch):
-    """Test to make sure error is return from get_temp to /temperature"""
+    """Test to make sure /temperature handles get_temp error"""
 
-    monkeypatch.setattr(script, "get_temp", lambda box_id: ({"error": "a"}, 200))
+    monkeypatch.setattr(script, "get_temp", lambda box_id: "An error has occured")
 
     response = client.get("/temperature")
 
-    assert "An error has occured" in response.text
+    assert "An error" in response.text

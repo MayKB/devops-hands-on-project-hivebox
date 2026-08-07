@@ -43,7 +43,7 @@ def temperature():
     for box_id in ids:
         result = get_temp(box_id)
         if isinstance(result, str): # Returned an error
-            return {"error": result}
+            return {"error": f"{result} | {box_id}"}
         total += result
         # Make sure result will be cached as a float
         cache_result = float(result)
@@ -83,10 +83,10 @@ def get_temp(box_id):
         sense = requests.get(url, timeout=10)
         sense.raise_for_status()
     except requests.exceptions.RequestException:
-        return "Could not reach API for box"
+        return f"Could not reach API for box {box_id}"
 
     if "sensors" not in sense.json():
-        return "does not have any sensors"
+        return f"{box_id} does not have any sensors"
 
     # Get all sensors from sensebox
     sensors = sense.json()['sensors']
@@ -103,7 +103,7 @@ def get_temp(box_id):
 
     # If no last measurement was found, return and alert
     if "lastMeasurement" not in temp_sensor or temp_sensor['lastMeasurement'] is None:
-        return "No last measurement for box"
+        return f"No last measurement for box {box_id}"
 
     no_date_or_value = False
     last = temp_sensor['lastMeasurement']
@@ -118,13 +118,13 @@ def get_temp(box_id):
 
     # If no date or value for last measurement, return and alert
     if s_created_at is None or s_value is None or no_date_or_value:
-        return "Date or value missing for last measurement of box"
+        return f"Date or value missing for last measurement of box {box_id}"
 
     # See if last measurement was within the last hour
     measure_time = datetime.fromisoformat(s_created_at)
     recent = (datetime.now(timezone.utc) - measure_time).total_seconds() < 3600
 
-    error_msg = "Last value too old"
+    error_msg = f"Last value too old for box {box_id}"
 
     # If there is a recent temperature value, return its value to be added
     return float(s_value) if recent else error_msg
