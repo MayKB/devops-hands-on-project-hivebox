@@ -22,8 +22,6 @@ app = Flask(__name__)
 csrf = CSRFProtect()
 csrf.init_app(app)
 
-r = valkey.Valkey(host="hivebox-helm-valkey.hivebox-namespace.svc.cluster.local", port=6379, db=0)
-
 # Used for testing
 # @app.route("/print", methods=['GET'])
 # def print():
@@ -34,6 +32,8 @@ r = valkey.Valkey(host="hivebox-helm-valkey.hivebox-namespace.svc.cluster.local"
 def temperature():
     """Get sensebox data and return average temperature from the last hour"""
 
+    r = valkey.Valkey(host="hivebox-helm-valkey.hivebox-namespace.svc.cluster.local", port=6379, db=0)
+
     # Ids for senseboxes, given by tutorial
     ids = [os.getenv("SENSEBOX_ID_1"), os.getenv("SENSEBOX_ID_2"), os.getenv("SENSEBOX_ID_3")]
     # Total temperature from the senseboxes, start at 0 degrees
@@ -41,7 +41,7 @@ def temperature():
 
     # For each of the given boxes:
     for box_id in ids:
-        result = check_cache(box_id)
+        result = check_cache(box_id, r)
         if isinstance(result, str): # Returned an error
             return {"error": f"{result} | {box_id}"}
         total += result
@@ -67,7 +67,7 @@ def temperature():
     return {"boxid1": ids[0], "boxid2": ids[1], "boxid3": ids[2],
             "totaltemp": total, "averagetemp": avg, "status": status}
 
-def check_cache(box_id):
+def check_cache(box_id, r):
     """Check Valkey for a cached value"""
 
     # If value for that box already exists in Valkey cache, return it
