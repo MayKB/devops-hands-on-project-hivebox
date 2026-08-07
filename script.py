@@ -9,6 +9,7 @@ import os
 from datetime import datetime, timezone
 
 import requests
+import valkey
 from dotenv import load_dotenv
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
@@ -21,9 +22,18 @@ app = Flask(__name__)
 csrf = CSRFProtect()
 csrf.init_app(app)
 
+# Used for testing
+# @app.route("/print", methods=['GET'])
+# def print():
+#     """print env vars"""
+#     return {"box1": os.getenv("SENSEBOX_ID_1")}
+
 @app.route("/temperature", methods=['GET'])
 def temperature():
     """Get sensebox data and return average temperature from the last hour"""
+
+    hostname = "hivebox-helm-valkey.hivebox-namespace.svc.cluster.local"
+    r = valkey.Valkey(host=hostname, port=6379, db=0)
 
     # Ids for senseboxes, given by tutorial
     ids = [os.getenv("SENSEBOX_ID_1"), os.getenv("SENSEBOX_ID_2"), os.getenv("SENSEBOX_ID_3")]
@@ -32,10 +42,16 @@ def temperature():
 
     # For each of the given boxes:
     for box_id in ids:
-        result = get_temp(box_id)
-        if isinstance(result, tuple): # Returned an error
-            return f"An error has occured, temperature not read for box {box_id}"
+        result = check_cache(box_id, r)
+        if isinstance(result, str): # Returned an error
+            return {"error": f"{result} | {box_id}"}
         total += result
+        # Make sure result will be cached as a float
+        cache_result = float(result)
+        # Set value in valkey cache for that box id
+        r.set(box_id, cache_result)
+        # Expire after 1 minute
+        r.expire(box_id, 300)
 
     # Divide the sum of all the temperatures by 3 to get the average
     avg = total/3
@@ -52,17 +68,26 @@ def temperature():
     return {"boxid1": ids[0], "boxid2": ids[1], "boxid3": ids[2],
             "totaltemp": total, "averagetemp": avg, "status": status}
 
+def check_cache(box_id, r):
+    """Check Valkey for a cached value"""
+
+    # If value for that box already exists in Valkey cache, return it
+    if r.get(box_id):
+        return float(r.get(box_id))
+
+    return get_temp(box_id)
+
 def get_temp(box_id):
     """Get the temperature value of the sensebox for the given ID"""
     try:
         url = f'https://api.opensensemap.org/boxes/{box_id}?format=json'
         sense = requests.get(url, timeout=10)
         sense.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        return {"error": f"Could not reach API for box {box_id}: {e}"}, 502
+    except requests.exceptions.RequestException:
+        return f"Could not reach API for box {box_id}"
 
     if "sensors" not in sense.json():
-        return {"error": f"{box_id} does not have any sensors"}, 200
+        return f"{box_id} does not have any sensors"
 
     # Get all sensors from sensebox
     sensors = sense.json()['sensors']
@@ -75,11 +100,11 @@ def get_temp(box_id):
 
     # If no temperature sensor was found, return and alert
     if temp_sensor is None:
-        return {"error": "One or more boxes do not have a temperature sensor"}, 200
+        return "One or more boxes do not have a temperature sensor"
 
     # If no last measurement was found, return and alert
     if "lastMeasurement" not in temp_sensor or temp_sensor['lastMeasurement'] is None:
-        return {"error": f"No last measurement for box {box_id}"}, 200
+        return f"No last measurement for box {box_id}"
 
     no_date_or_value = False
     last = temp_sensor['lastMeasurement']
@@ -94,16 +119,16 @@ def get_temp(box_id):
 
     # If no date or value for last measurement, return and alert
     if s_created_at is None or s_value is None or no_date_or_value:
-        return {"error": f"Date or value missing for last measurement of box {box_id}"}, 200
+        return f"Date or value missing for last measurement of box {box_id}"
 
     # See if last measurement was within the last hour
     measure_time = datetime.fromisoformat(s_created_at)
     recent = (datetime.now(timezone.utc) - measure_time).total_seconds() < 3600
 
-    error_msg = f"Last value too old for {box_id}, {s_created_at}"
+    error_msg = f"Last value too old for box {box_id}"
 
     # If there is a recent temperature value, return its value to be added
-    return float(s_value) if recent else {"error": error_msg}, 200
+    return float(s_value) if recent else error_msg
 
 @app.route('/version', methods=['GET'])
 def version():

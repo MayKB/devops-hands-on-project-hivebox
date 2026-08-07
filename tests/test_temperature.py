@@ -38,6 +38,26 @@ class MockNoTempSensor:
         """Mock json with no sensors titled 'Temperatur'"""
         return { 'sensors': [{'title': 'No'}, {'title': 'Also no'}] }
 
+class MockValkey:
+    """Mock a Valkey connection"""
+    # pylint: disable=unused-argument
+    def get(self):
+        """Mock Valkey.get"""
+        # pylint: disable=unnecessary-pass
+        pass
+
+    # pylint: disable=unused-argument
+    def set(self, port, db):
+        """Mock Valkey.set"""
+        # pylint: disable=unnecessary-pass
+        pass
+
+    # pylint: disable=unused-argument
+    def expire(self, port, db):
+        """Mock Valkey.expire"""
+        # pylint: disable=unnecessary-pass
+        pass
+
 class MockNoTempLast:
     """Mock a requests response no lastMeasurement for the Temperatur sensor"""
     def raise_for_status(self):
@@ -101,7 +121,7 @@ def test_get_temp_error():
         m.get(f'https://api.opensensemap.org/boxes/{box_id}?format=json', status_code=502)
         x = script.get_temp(box_id)
 
-    assert 502 in x
+    assert "Could not reach API" in x
 
 def test_get_temp_no_sensors(monkeypatch):
     """Test get_temp no sensors error"""
@@ -112,7 +132,7 @@ def test_get_temp_no_sensors(monkeypatch):
     monkeypatch.setattr(requests, "get", mock_get)
 
     x = script.get_temp(23452345235)
-    assert "does not have any sensors" in x[0]['error']
+    assert "does not have any sensors" in x
 
 def test_get_temp_no_temp_sensor(monkeypatch):
     """Test get_temp no sensors named 'Temperatur' error"""
@@ -123,7 +143,7 @@ def test_get_temp_no_temp_sensor(monkeypatch):
     monkeypatch.setattr(requests, "get", mock_get)
 
     x = script.get_temp(23452345235)
-    assert "do not have a temperature sensor" in x[0]['error']
+    assert "do not have a temperature sensor" in x
 
 def test_get_temp_no_temp_measurement(monkeypatch):
     """Test get_temp no lastMeasurement error"""
@@ -134,7 +154,7 @@ def test_get_temp_no_temp_measurement(monkeypatch):
     monkeypatch.setattr(requests, "get", mock_get)
 
     x = script.get_temp(23452345235)
-    assert "No last measurement for box" in x[0]['error']
+    assert "No last measurement for box" in x
 
 def test_get_temp_no_temp_value(monkeypatch):
     """Test get_temp no value for lastMeasurement"""
@@ -145,7 +165,7 @@ def test_get_temp_no_temp_value(monkeypatch):
     monkeypatch.setattr(requests, "get", mock_get)
 
     x = script.get_temp(23452345235)
-    assert "Date or value missing for last measurement of box" in x[0]['error']
+    assert "Date or value missing for last measurement of box" in x
 
 def test_get_temp_no_temp_value_old(monkeypatch):
     """Test get_temp lastMeasurement value too old"""
@@ -156,37 +176,57 @@ def test_get_temp_no_temp_value_old(monkeypatch):
     monkeypatch.setattr(requests, "get", mock_get)
 
     x = script.get_temp(23452345235)
-    assert "Last value too old for" in x[0]['error']
+    assert "Last value too old" in x
 
 def test_temperature_good(client, monkeypatch):
     """Test to make sure "Good" status is returned"""
+    # pylint: disable=unused-argument
+    def mock_valkey(host, port, db):
+        return MockValkey()
 
-    monkeypatch.setattr(script, "get_temp", lambda box_id: 20.0)
+    monkeypatch.setattr("valkey.Valkey", mock_valkey)
+
+    monkeypatch.setattr(script, "check_cache", lambda box_id, r: 20.0)
 
     response = client.get("/temperature")
     assert response.json["status"] == "Good"
 
 def test_temperature_cold(client, monkeypatch):
     """Test to make sure "Too Cold" status is returned"""
+    # pylint: disable=unused-argument
+    def mock_valkey(host, port, db):
+        return MockValkey()
 
-    monkeypatch.setattr(script, "get_temp", lambda box_id: 5.0)
+    monkeypatch.setattr("valkey.Valkey", mock_valkey)
+
+    monkeypatch.setattr(script, "check_cache", lambda box_id, r: 5.0)
 
     response = client.get("/temperature")
     assert response.json["status"] == "Too Cold"
 
 def test_temperature_hot(client, monkeypatch):
     """Test to make sure "Too Hot" status is returned"""
+    # pylint: disable=unused-argument
+    def mock_valkey(host, port, db):
+        return MockValkey()
 
-    monkeypatch.setattr(script, "get_temp", lambda box_id: 37.0)
+    monkeypatch.setattr("valkey.Valkey", mock_valkey)
+
+    monkeypatch.setattr(script, "check_cache", lambda box_id, r: 37.0)
 
     response = client.get("/temperature")
     assert response.json["status"] == "Too Hot"
 
 def test_temperature_bad(client, monkeypatch):
-    """Test to make sure error is return from get_temp to /temperature"""
+    """Test to make sure /temperature handles error"""
+    # pylint: disable=unused-argument
+    def mock_valkey(host, port, db):
+        return MockValkey()
 
-    monkeypatch.setattr(script, "get_temp", lambda box_id: ({"error": "a"}, 200))
+    monkeypatch.setattr("valkey.Valkey", mock_valkey)
+
+    monkeypatch.setattr(script, "check_cache", lambda box_id, r: "An error has occured")
 
     response = client.get("/temperature")
 
-    assert "An error has occured" in response.text
+    assert "An error" in response.text

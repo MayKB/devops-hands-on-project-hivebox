@@ -60,12 +60,15 @@ In its current state, three endpoints can be accessed using Flask.
 - **/version:** Gets the current version of the project on GitHub
 - **/metrics:** Gets Prometheus metrics about the app
 
+Note that this app was built and tested using WSL2.
+
 ### Prerequisites
 
 - Docker
 - kind
 - kubectl
 - GitHub Container Registry
+- Helm
 - curl
 
 ### Preparation
@@ -73,12 +76,15 @@ In its current state, three endpoints can be accessed using Flask.
 - Clone the repository by opening a terminal and running `git clone https://github.com/MayKB/devops-hands-on-project-hivebox.git`
 - Make sure Docker is running and has Kubernetes enabled
   - If using WSL, make sure `Enable integration with my default WSL distro` is set in Settings > Resources > WSL integration
-- Create a file called `.env` in the project root, and input three SenseBox IDs using the following format:
+- Make a copy of `helm-chart/templates/configmap.dev.yaml` and name it `configmap.yaml`.
+  - Uncomment all the lines and update the three SenseBox IDs at the bottom to something like:
 ````
-SENSEBOX_ID_1=5eba5fbad46fb8001b799786
-SENSEBOX_ID_2=5c21ff8f919bf8001adf2488
-SENSEBOX_ID_3=5ade1acf223bd80019a1011c
+data:
+  SENSEBOX_ID_1: 5eba5fbad46fb8001b799786
+  SENSEBOX_ID_2: 5c21ff8f919bf8001adf2488
+  SENSEBOX_ID_3: 609846401c3320001cc1dee2
 ````
+- In `values.yaml`, update `image.repository` to `repository: ghcr.io/<lowercase github username/org name>/<image name>`
 
 ### Local Execution
 
@@ -88,15 +94,12 @@ SENSEBOX_ID_3=5ade1acf223bd80019a1011c
   - If you are using a proper Linux distribution, run `docker run -d --name cloud-provider-kind --rm --network host -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:${VERSION}`
   - If you are on a Mac or using WSL 2, run `sudo docker run -d --name cloud-provider-kind --privileged --rm --network host -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:${VERSION} --enable-lb-port-mapping` and enter your password if prompted
 - Verify that cloud-provider-kind is running with `docker ps --filter name=cloud-provider-kind`. You can also check the logs with `docker logs cloud-provider-kind`
-- Apply the cloud-provider-kind manifest file with `kubectl apply -f .k8s/base/deploy-cloud.yaml`
+- Apply the cloud-provider-kind manifest file with `kubectl apply -f .k8s/deploy-cloud.yaml`
 - Verify the gateway was created properly by running `kubectl get gateway -n gateway-infra gateway`. Look for `PROGRAMMED: True` to confirm.
 - To build the image, navigate to the project folder and run `docker build -t <image name> .`
 - Tag the image using `docker tag <image name> ghcr.io/<lowercase github username/org name>/<image name>:local-test`
 - Push to GitHub Container Registry using `docker push ghcr.io/<lowercase github username/org name>/<image name>:local-test`
-- Update `.k8s/base/deploy-app.yaml` to use `image: ghcr.io/<lowercase github username/org name>/<image name>:placeholder`
-- Update `.k8s/overlays/dev/kustomization.yaml` to use `name: ghcr.io/<lowercase github username/org name>/<image name>`
-- Apply the app deploy manifest file with `kubectl apply -k .k8s/overlays/dev/`
-- Apply your env variables as a configmap using `kubectl create configmap hivebox-config --from-env-file=.env -n hivebox-namespace`
+- To install the Helm chart, run `helm upgrade --install --namespace hivebox-namespace --create-namespace -f ./helm-chart/environments/values.dev.yaml hivebox-helm ./helm-chart`
 - Create a secret to allow you to pull from the registry by running
 ````
 kubectl create secret docker-registry ghcr-secret \
@@ -105,13 +108,14 @@ kubectl create secret docker-registry ghcr-secret \
   --docker-password=<token> \
   -n hivebox-namespace
 ````
-- Apply the http routing manifest file with `kubectl apply -f .k8s/base/http-route.yaml`
-- Test the application with `curl`
-  - If using a proper linux distribution, run `GW_ADDR=$(kubectl get gateway -n gateway-infra gateway -o jsonpath='{.status.addresses[0].value}')` to set the IP address, then run `curl --resolve some.exampledomain.example:80:${GW_ADDR}/metrics http://some.exampledomain.example` to test the `/metrics` endpoint. The same can be done for `/version` and `/temperature`.
-  - If using WSL2, first find the ephemeral port by running `docker ps` then finding the `0.0.0.0:<ephemeral port>->80/tcp` address that belongs to the `envoyproxy/envoy` image. Then test the `metrics` endpoint with `curl -v --max-time 15 -H "Host: some.exampledomain.example" http://localhost:<port>/metrics`. The same can be done for `/version` and `/temperature`. It may take up to a minute for it to start connecting properly, so if you get an error give it some time before trying again.
+- Test the application with `curl`. If using WSL2, follow these steps:
+  - Resolve the ip address `127.0.0.1` to `some.exampledomain.example` by editing the `/etc/hosts` file to include `127.0.0.1  some.exampledomain.example` under the already existing rows.
+  - Find the ephemeral Envoy port by running `docker ps` then finding the `0.0.0.0:<ephemeral port>->80/tcp` address that belongs to the `envoyproxy/envoy` image.
+  - Test any endpoint with `curl -v --max-time 25 http://some.exampledomain.example:<port>/<endpoint>`. It may take up to a minute for it to start connecting properly, so if you get an error give it some time before trying again.
 
 ### Cleanup
 
+- `helm uninstall hivebox-helm --namespace hivebox-namespace`
 - Start by deleting the namespaces and their resources with
 ````
 kubectl delete namespace gateway-infra
@@ -124,3 +128,4 @@ kubectl delete namespace hivebox-namespace
 
 - If you get the error `Unable to find image 'registry.k8s.io/cloud-provider-kind/cloud-controller-manager:latest'` after running the `sudo docker run [...]` command, there may be an issue with the GitHub API. Run `curl -s -L -o /dev/null -w '%{http_code} %{url_effective}\n' https://github.com/kubernetes-sigs/cloud-provider-kind/releases/latest` until you get a `200` status response, then rerun the `sudo docker run [...]` command.
 - If you get the error `error from registry: unauthorized` after running the `docker tag [...]` or `docker push [...]` commands, run `docker login ghcr.io` and log in to the GitHub Container Registry with your GitHub username and the same personal access token you will use in the `kubectl create secret [...]` command. This is a classic Personal Access Token that requires `delete:packages`, `repo` and `write:packages` permissions.
+- If you get an error after running the `export [...] / export [...] / echo [...] / kubectl [...]` commands, run `kubectl get deployments -A` and see if the `hivebox-helm-valkey` deployment is listed as `READY: 0/1`. If it is, wait about a minute and then run the kubectl command again. If `READY` is listed as 1/1, re-run the
