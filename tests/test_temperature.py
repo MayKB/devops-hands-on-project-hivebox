@@ -41,17 +41,20 @@ class MockNoTempSensor:
 class MockValkey:
     """Mock a Valkey connection"""
     # pylint: disable=unused-argument
-    def get(host):
+    def get(self):
+        """Mock Valkey.get"""
         # pylint: disable=unnecessary-pass
         pass
-    
+
     # pylint: disable=unused-argument
-    def set(host, port, db):
+    def set(self, port, db):
+        """Mock Valkey.set"""
         # pylint: disable=unnecessary-pass
         pass
-    
+
     # pylint: disable=unused-argument
-    def expire(host, port, db):
+    def expire(self, port, db):
+        """Mock Valkey.expire"""
         # pylint: disable=unnecessary-pass
         pass
 
